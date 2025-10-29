@@ -4,886 +4,516 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Genius Video Player with Real Chat</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css  ">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    /* ====== CSS Reset & Variables ====== */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    :root {
-        --primary: #1a2a6c;
-        --secondary: #b21f1f;
-        --accent: #fdbb2d;
-        --dark: #1e1e2f;
-        --darker: #2d2d44;
-        --light: #ffffff;
-    }
-    
-    /* ====== Body & Layout ====== */
-    html, body {
-        height: 100%;
-        overflow: hidden;
-    }
-    body {
-        background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-    }
-    
-    /* ====== Main Container ====== */
+/* ====== CSS Reset & Variables ====== */
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+:root {
+    --primary: #1a2a6c;
+    --secondary: #b21f1f;
+    --accent: #fdbb2d;
+    --dark: rgba(25, 25, 40, 0.55);
+    --darker: rgba(10, 10, 20, 0.6);
+    --light: #ffffff;
+    --blur: blur(18px);
+}
+
+/* ====== Background & Layout ====== */
+html, body {
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* ====== Frosted Glass Containers ====== */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    height: 95vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    backdrop-filter: var(--blur);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    overflow: hidden;
+}
+
+/* ====== Video Container ====== */
+.video-container {
+    flex: 1;
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: var(--blur);
+    background: rgba(0,0,0,0.35);
+    box-shadow: 0 0 25px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s ease;
+}
+.video-container:hover {
+    box-shadow: 0 0 40px rgba(253,187,45,0.3);
+    transform: scale(1.01);
+}
+
+.video-header {
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: var(--blur);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--light);
+    font-weight: 600;
+}
+.video-title { font-size: 1rem; }
+.video-status { font-size: 0.8rem; opacity: 0.8; }
+
+.video-wrapper {
+    flex: 1;
+    position: relative;
+    background: #000;
+}
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background-color: #000;
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* ====== Video Controls ====== */
+.video-controls {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+}
+.play-btn, .fullscreen-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--light);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.play-btn:hover, .fullscreen-btn:hover {
+    background: var(--accent);
+    color: var(--dark);
+    transform: scale(1.1);
+}
+
+.progress-container {
+    flex-grow: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+}
+.progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    border-radius: 3px;
+    box-shadow: 0 0 6px var(--accent);
+}
+.time-display {
+    font-size: 0.8rem;
+    color: var(--light);
+}
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.volume-icon { color: var(--light); }
+.volume-slider {
+    width: 60px;
+    height: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+    position: relative;
+}
+.volume-level {
+    height: 100%;
+    background: var(--accent);
+    width: 80%;
+    border-radius: 2px;
+}
+
+/* ====== Chat Container ====== */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: var(--blur);
+    background: rgba(20,20,30,0.6);
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+}
+
+.chat-header {
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.07);
+    color: var(--light);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.online-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+}
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background: #4CAF50;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #4CAF50;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.message {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 14px;
+    line-height: 1.4;
+    font-size: 0.85rem;
+    word-wrap: break-word;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+}
+.message.received {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.1);
+    color: var(--light);
+    border-left: 2px solid var(--accent);
+}
+.message.sent {
+    align-self: flex-end;
+    background: rgba(253,187,45,0.2);
+    color: #fffbe6;
+    border-right: 2px solid var(--accent);
+}
+.message-sender {
+    font-weight: 600;
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+}
+.message-time {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    margin-top: 4px;
+    text-align: right;
+}
+.reply-indicator {
+    border-left: 2px solid var(--accent);
+    padding-left: 8px;
+    font-size: 0.75rem;
+    opacity: 0.85;
+    margin-bottom: 4px;
+}
+.reply-sender { font-weight: bold; }
+
+/* ====== Chat Input ====== */
+.chat-input-container {
+    background: rgba(255,255,255,0.08);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.chat-input {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 20px;
+    color: var(--light);
+    padding: 8px 12px;
+    outline: none;
+    font-size: 0.9rem;
+    backdrop-filter: blur(8px);
+}
+.send-btn {
+    background: var(--accent);
+    border: none;
+    color: var(--dark);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.send-btn:hover {
+    transform: scale(1.1);
+    background: #ffcf4f;
+}
+
+/* ====== Login Modal ====== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+}
+.login-modal {
+    background: rgba(30,30,50,0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 340px;
+    width: 90%;
+    color: var(--light);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+.login-title {
+    text-align: center;
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+}
+.form-input {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    background: rgba(255,255,255,0.1);
+    color: var(--light);
+}
+.login-btn {
+    background: var(--accent);
+    color: var(--dark);
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.25s;
+}
+.login-btn:hover { background: #ffcf4f; }
+
+/* ====== Responsive ====== */
+@media (min-width: 992px) {
     .container {
-        width: 100%;
-        max-width: 1200px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
+        flex-direction: row;
     }
-    
-    /* ====== Video Container ====== */
-    .video-container {
-        background-color: var(--dark);
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0; /* Important for flex children */
-        height: 40%; /* Reduced from 50% */
-        min-height: 150px; /* Maintained minimum */
-    }
-    .video-header {
-        padding: 8px 12px; /* Reduced */
-        background-color: var(--darker);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: var(--light);
-    }
-    .video-title { 
-        font-size: 0.9rem; /* Reduced */
-        font-weight: 600; 
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .video-status {
-        font-size: 0.7rem; /* Reduced */
-        opacity: 0.8;
-    }
-    .video-wrapper { 
-        position: relative; 
-        width: 100%; 
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #000;
-    }
-    video { 
-        width: 100%; 
-        height: 100%; 
-        background-color: #000; 
-        display: block; 
-        object-fit: contain;
-    }
-    .loading-spinner {
-        position: absolute;
-        top: 50%; 
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 40px; /* Reduced */
-        height: 40px;
-        border: 3px solid rgba(255,255,255,0.3);
-        border-radius: 50%;
-        border-top-color: var(--accent);
-        animation: spin 1s ease-in-out infinite;
-        z-index: 10;
-        display: none;
-    }
-    @keyframes spin { 
-        to { transform: translate(-50%, -50%) rotate(360deg); } 
-    }
-    
-    /* ====== Video Controls ====== */
-    .video-controls {
-        padding: 6px 10px; /* Reduced */
-        background-color: var(--darker);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px; /* Reduced */
-    }
-    .play-btn, .fullscreen-btn {
-        background-color: #4a4a6a; 
-        border: none; 
-        color: var(--light);
-        width: 28px; /* Reduced */
-        height: 28px; 
-        border-radius: 50%; 
-        display: flex; 
-        justify-content: center; 
-        align-items: center;
-        cursor: pointer; 
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    .play-btn:hover, .fullscreen-btn:hover { 
-        background-color: #5a5a7a; 
-        transform: scale(1.05); 
-    }
-    .progress-container { 
-        flex-grow: 1; 
-        height: 4px; /* Reduced */
-        background-color: #4a4a6a; 
-        border-radius: 2px; 
-        position: relative; 
-        cursor: pointer; 
-        min-width: 50px;
-    }
-    .progress-bar { 
-        height: 100%; 
-        background-color: var(--accent); 
-        border-radius: 2px; 
-        width: 0%; 
-        transition: width 0.1s; 
-    }
-    .time-display { 
-        color: var(--light); 
-        font-size: 0.7rem; /* Reduced */
-        min-width: 70px; /* Reduced */
-        text-align: center;
-        flex-shrink: 0;
-    }
-    .volume-control { 
-        display: flex; 
-        align-items: center; 
-        gap: 4px; /* Reduced */
-        flex-shrink: 0;
-    }
-    .volume-icon { 
-        color: var(--light); 
-        font-size: 0.8rem; /* Reduced */
-    }
-    .volume-slider { 
-        width: 40px; /* Reduced */
-        height: 3px; /* Reduced */
-        background-color: #4a4a6a; 
-        border-radius: 2px; 
-        position: relative; 
-        cursor: pointer; 
-    }
-    .volume-level { 
-        height: 100%; 
-        background-color: var(--accent); 
-        border-radius: 2px; 
-        width: 80%; 
-    }
-    
-    /* ====== Chat Container ====== */
-    .chat-container { 
-        background-color: var(--dark); 
-        border-radius: 12px; 
-        overflow: hidden; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
-        display: flex; 
-        flex-direction: column; 
-        height: 60%; /* Increased from 50% */
-        min-height: 350px; /* Increased minimum */
-    }
-    .chat-header { 
-        padding: 8px 10px; /* Reduced */
-        background-color: var(--darker); 
-        color: var(--light); 
-        font-size: 0.9rem; /* Reduced */
-        font-weight: 600; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        flex-shrink: 0;
-    }
-    .online-indicator { 
-        display: flex; 
-        align-items: center; 
-        gap: 4px; /* Reduced */
-        font-size: 0.7rem; /* Reduced */
-        font-weight: normal; 
-    }
-    .online-dot { 
-        width: 6px; /* Reduced */
-        height: 6px; 
-        background-color: #4CAF50; 
-        border-radius: 50%; 
-    }
-    .chat-messages { 
-        flex-grow: 1; 
-        padding: 10px; /* Reduced */
-        overflow-y: auto; 
-        display: flex; 
-        flex-direction: column; 
-        gap: 8px; /* Reduced */
-    }
-    .message { 
-        max-width: 85%; 
-        padding: 6px 10px; /* Reduced */
-        border-radius: 14px; /* Reduced */
-        line-height: 1.25; /* Reduced */
-        position: relative; 
-        word-wrap: break-word;
-        font-size: 0.8rem; /* Reduced */
-        transition: transform 0.2s, background-color 0.2s;
-    }
-    .message.received { 
-        background-color: var(--darker); 
-        color: var(--light); 
-        align-self: flex-start; 
-        border-bottom-left-radius: 4px; 
-    }
-    .message.sent { 
-        background-color: var(--accent); 
-        color: var(--dark); 
-        align-self: flex-end; 
-        border-bottom-right-radius: 4px; 
-    }
-    .message-sender { 
-        font-weight: 600; 
-        font-size: 0.65rem; /* Reduced */
-        margin-bottom: 2px; /* Reduced */
-    }
-    .message-time { 
-        font-size: 0.55rem; /* Reduced */
-        opacity: 0.7; 
-        text-align: right; 
-        margin-top: 2px; /* Reduced */
-    }
-    .reply-indicator {
-        position: relative;
-        padding-left: 12px;
-        border-left: 2px solid var(--accent);
-        font-size: 0.7rem;
-        margin-bottom: 4px;
-        opacity: 0.8;
-    }
-    .reply-text {
-        font-style: italic;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    /* ====== Reply Indicator ====== */
-    .reply-indicator {
-        display: flex;
-        flex-direction: column;
-    }
-    .reply-sender {
-        font-weight: bold;
-    }
-    
-    /* ====== Chat Input ====== */
-    .chat-input-container { 
-        padding: 8px 10px; /* Reduced */
-        background-color: var(--darker); 
-        display: flex; 
-        gap: 5px; /* Reduced */
-        flex-shrink: 0;
-        position: relative;
-    }
-    .reply-preview {
-        background-color: var(--darker);
-        padding: 6px 10px;
-        border-radius: 8px;
-        margin-bottom: 5px;
-        font-size: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        border-left: 2px solid var(--accent);
-    }
-    .reply-preview-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 3px;
-    }
-    .remove-reply {
-        background: none;
-        border: none;
-        color: var(--light);
-        cursor: pointer;
-        font-size: 0.8rem;
-        padding: 0 5px;
-    }
-    .chat-input { 
-        flex-grow: 1; 
-        padding: 6px 10px; /* Reduced */
-        border: none; 
-        border-radius: 16px; /* Reduced */
-        background-color: var(--dark); 
-        color: var(--light); 
-        outline: none; 
-        font-size: 0.8rem; /* Reduced */
-    }
-    .send-btn { 
-        background-color: var(--accent); 
-        border: none; 
-        color: var(--dark); 
-        width: 32px; /* Reduced */
-        height: 32px; 
-        border-radius: 50%; 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        cursor: pointer; 
-        transition: all 0.2s; 
-        flex-shrink: 0;
-    }
-    .send-btn:hover { 
-        background-color: #ffcc44; 
-        transform: scale(1.05); 
-    }
-    
-    /* ====== Login Modal ====== */
-    .modal-overlay { 
-        position: fixed; 
-        top: 0; 
-        left: 0; 
-        right: 0; 
-        bottom: 0; 
-        background-color: rgba(0,0,0,0.7); 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        z-index: 1000; 
-    }
-    .login-modal { 
-        background-color: var(--dark); 
-        padding: 18px; /* Reduced */
-        border-radius: 12px; 
-        width: 90%; 
-        max-width: 350px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-    }
-    .login-title { 
-        color: var(--light); 
-        text-align: center; 
-        margin-bottom: 12px; /* Reduced */
-        font-size: 1.1rem; /* Reduced */
-    }
-    .login-form { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 10px; /* Reduced */
-    }
-    .form-group { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 3px; /* Reduced */
-    }
-    .form-label { 
-        color: var(--light); 
-        font-size: 0.8rem; /* Reduced */
-    }
-    .form-input { 
-        padding: 8px 10px; /* Reduced */
-        border-radius: 8px; 
-        border: none; 
-        background-color: var(--darker); 
-        color: var(--light); 
-        outline: none; 
-    }
-    .login-btn { 
-        background-color: var(--accent); 
-        color: var(--dark); 
-        border: none; 
-        padding: 8px; /* Reduced */
-        border-radius: 8px; 
-        font-weight: 600; 
-        cursor: pointer; 
-        transition: all 0.2s; 
-        margin-top: 6px; /* Reduced */
-    }
-    .login-btn:hover { 
-        background-color: #ffcc44; 
-    }
-    
-    /* ====== Responsive Design ====== */
-    /* Desktop Layout */
-    @media (min-width: 992px) { 
-        .container { 
-            flex-direction: row; 
-            height: 95vh;
-            max-height: 800px;
-            padding: 20px;
-            gap: 20px;
-        } 
-        .video-container { 
-            flex: 2; 
-            height: auto; /* Reset for desktop */
-        } 
-        .chat-container { 
-            flex: 1; 
-            height: auto; /* Reset for desktop */
-        }
-        
-        /* Larger controls on desktop */
-        .video-header {
-            padding: 15px 20px;
-        }
-        .video-title {
-            font-size: 1.2rem;
-        }
-        .video-controls {
-            padding: 15px 20px;
-            gap: 15px;
-        }
-        .play-btn, .fullscreen-btn {
-            width: 40px;
-            height: 40px;
-        }
-        .volume-slider {
-            width: 80px;
-        }
-        .time-display {
-            min-width: 100px;
-            font-size: 0.9rem;
-        }
-        .chat-header {
-            padding: 15px 20px;
-            font-size: 1.2rem;
-        }
-        .chat-input-container {
-            padding: 15px 20px;
-            gap: 10px;
-        }
-        .send-btn {
-            width: 44px;
-            height: 44px;
-        }
-    }
-    
-    /* Tablet adjustments */
-    @media (max-width: 768px) and (min-width: 577px) {
-        .container {
-            height: 95vh;
-            max-height: none;
-        }
-        .video-header, .video-controls {
-            padding: 12px 15px;
-        }
-        .volume-slider {
-            width: 70px;
-        }
-    }
-    
-    /* Mobile adjustments */
-    @media (max-width: 576px) {
-        .container {
-            padding: 8px;
-            gap: 8px;
-            height: 100%;
-        }
-        .video-header, .video-controls {
-            padding: 8px 12px;
-        }
-        .video-title {
-            font-size: 1rem;
-        }
-        .video-status {
-            font-size: 0.75rem;
-        }
-        .time-display {
-            min-width: 80px;
-            font-size: 0.75rem;
-        }
-        .volume-slider {
-            width: 50px;
-        }
-        .chat-container {
-            min-height: 320px; /* Adjusted for mobile */
-        }
-        .chat-header {
-            padding: 10px 12px;
-            font-size: 1rem;
-        }
-        .chat-messages {
-            padding: 12px;
-        }
-        .chat-input-container {
-            padding: 10px 12px;
-        }
-        .message {
-            max-width: 90%;
-        }
-        
-        /* Hide volume control on very small screens */
-        @media (max-width: 380px) {
-            .volume-control {
-                display: none;
-            }
-        }
-    }
-    
-    /* Very short screens */
-    @media (max-height: 600px) {
-        .chat-container {
-            min-height: 220px;
-        }
-        .chat-messages {
-            padding: 10px;
-            gap: 8px;
-        }
-        .message {
-            padding: 8px 12px;
-        }
-    }
-    
-    /* Fullscreen styles */
-    .video-container:fullscreen {
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
-    }
-    
-    .video-container:fullscreen .video-wrapper {
-        flex: 1;
-    }
-    
-    /* Prevent iOS zoom on input focus */
-    input, textarea {
-        font-size: 16px;
-    }
+    .video-container { flex: 2; }
+    .chat-container { flex: 1; }
+}
 </style>
 </head>
 <body>
+
 <!-- Login Modal -->
 <div class="modal-overlay" id="loginModal">
-    <div class="login-modal">
-        <h2 class="login-title">Join the Chat</h2>
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="username">Your Name</label>
-                <input type="text" class="form-input" id="username" placeholder="Enter your name" required autofocus>
-            </div>
-            <button type="submit" class="login-btn">Join Chat</button>
-        </form>
-    </div>
+  <div class="login-modal">
+    <h2 class="login-title">Join the Chat</h2>
+    <form id="loginForm">
+      <input type="text" class="form-input" id="username" placeholder="Enter your name" required autofocus>
+      <button type="submit" class="login-btn">Join Chat</button>
+    </form>
+  </div>
 </div>
 
 <!-- Main Content -->
 <div class="container" id="mainContainer" style="display:none;">
-    <div class="video-container">
-        <div class="video-header">
-            <div class="video-title">Genius Video Player</div>
-            <div class="video-status">Ready to play</div>
-        </div>
-        <div class="video-wrapper">
-            <video id="videoPlayer">
-                <source src="http://172.174.228.24:8089/video" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <div class="loading-spinner" id="loadingSpinner"></div>
-        </div>
-        <div class="video-controls">
-            <button class="play-btn" id="playBtn"><i class="fas fa-play"></i></button>
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-            <div class="volume-control">
-                <div class="volume-icon"><i class="fas fa-volume-up"></i></div>
-                <div class="volume-slider" id="volumeSlider">
-                    <div class="volume-level" id="volumeLevel"></div>
-                </div>
-            </div>
-            <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
-        </div>
+  <div class="video-container">
+    <div class="video-header">
+      <div class="video-title">Genius Video Player</div>
+      <div class="video-status">Ready to play</div>
     </div>
+    <div class="video-wrapper">
+      <video id="videoPlayer">
+        <source src="http://172.174.228.24:8089/video" type="video/mp4">
+        Your browser does not support video.
+      </video>
+      <div class="loading-spinner" id="loadingSpinner"></div>
+    </div>
+    <div class="video-controls">
+      <button class="play-btn" id="playBtn"><i class="fas fa-play"></i></button>
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+      <div class="volume-control">
+        <div class="volume-icon"><i class="fas fa-volume-up"></i></div>
+        <div class="volume-slider" id="volumeSlider">
+          <div class="volume-level" id="volumeLevel"></div>
+        </div>
+      </div>
+      <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
+    </div>
+  </div>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            <span>Chat Room - <span id="userNameDisplay">User</span></span>
-            <div class="online-indicator">
-                <div class="online-dot"></div>
-                <span id="onlineCount">1 Online</span>
-            </div>
-        </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-container">
-            <div id="replyPreview" class="reply-preview" style="display: none;">
-                <div class="reply-preview-header">
-                    <span>Replying to:</span>
-                    <button class="remove-reply" id="removeReply"><i class="fas fa-times"></i></button>
-                </div>
-                <div id="replyPreviewContent"></div>
-            </div>
-            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
-            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
-        </div>
+  <div class="chat-container">
+    <div class="chat-header">
+      <span>Chat Room - <span id="userNameDisplay">User</span></span>
+      <div class="online-indicator">
+        <div class="online-dot"></div>
+        <span id="onlineCount">1 Online</span>
+      </div>
     </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-container">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+      <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
 </div>
 
-<!-- Socket.IO -->
 <script src="/socket.io/socket.io.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const loginModal = document.getElementById('loginModal');
-    const mainContainer = document.getElementById('mainContainer');
-    const loginForm = document.getElementById('loginForm');
-    const usernameInput = document.getElementById('username');
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    const onlineCount = document.getElementById('onlineCount');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const replyPreview = document.getElementById('replyPreview');
-    const replyPreviewContent = document.getElementById('replyPreviewContent');
-    const removeReply = document.getElementById('removeReply');
+document.addEventListener("DOMContentLoaded", () => {
+  const loginModal = document.getElementById("loginModal");
+  const mainContainer = document.getElementById("mainContainer");
+  const loginForm = document.getElementById("loginForm");
+  const usernameInput = document.getElementById("username");
+  const userNameDisplay = document.getElementById("userNameDisplay");
+  const onlineCount = document.getElementById("onlineCount");
+  const chatMessages = document.getElementById("chatMessages");
+  const chatInput = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const video = document.getElementById("videoPlayer");
+  const playBtn = document.getElementById("playBtn");
+  const progressContainer = document.getElementById("progressContainer");
+  const progressBar = document.getElementById("progressBar");
+  const timeDisplay = document.getElementById("timeDisplay");
+  const volumeSlider = document.getElementById("volumeSlider");
+  const volumeLevel = document.getElementById("volumeLevel");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+  const videoStatus = document.querySelector(".video-status");
 
-    // Video elements
-    const video = document.getElementById('videoPlayer');
-    const playBtn = document.getElementById('playBtn');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const volumeLevel = document.getElementById('volumeLevel');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const videoStatus = document.querySelector('.video-status');
+  const socket = io();
+  let currentUser = "";
 
-    let currentUser = '';
-    let replyToMessage = null;
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const username = usernameInput.value.trim();
+    if (!username) return;
+    currentUser = username;
+    userNameDisplay.textContent = username;
+    loginModal.style.display = "none";
+    mainContainer.style.display = "flex";
+    socket.emit("join", username);
+  });
 
-    // Connect to server
-    const socket = io();
+  function sendMessage() {
+    const msg = chatInput.value.trim();
+    if (!msg) return;
+    socket.emit("chatMessage", msg);
+    chatInput.value = "";
+  }
+  sendBtn.addEventListener("click", sendMessage);
+  chatInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
 
-    // Login
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const username = usernameInput.value.trim();
-        if(!username) return;
-        currentUser = username;
-        userNameDisplay.textContent = username;
-        loginModal.style.display = 'none';
-        mainContainer.style.display = 'flex';
-        socket.emit('join', username);
-        chatInput.focus();
-    });
+  socket.on("message", ({ sender, text }) => {
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("message", sender === currentUser ? "sent" : "received");
+    const now = new Date();
+    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
+    msgDiv.innerHTML = `<div class="message-sender">${sender}</div><div>${text}</div><div class="message-time">${time}</div>`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
 
-    // Send message
-    function sendMessage() {
-        const messageText = chatInput.value.trim();
-        if(!messageText) return;
-        
-        if(replyToMessage) {
-            // Send reply message
-            socket.emit('chatMessage', {
-                text: messageText,
-                replyTo: {
-                    sender: replyToMessage.sender,
-                    text: replyToMessage.text
-                }
-            });
-            // Reset reply
-            replyToMessage = null;
-            replyPreview.style.display = 'none';
-            chatInput.placeholder = 'Type your message...';
-        } else {
-            // Send regular message
-            socket.emit('chatMessage', messageText);
-        }
-        
-        chatInput.value = '';
+  socket.on("onlineCount", (count) => {
+    onlineCount.textContent = `${count} Online`;
+  });
+
+  playBtn.addEventListener("click", togglePlay);
+  video.addEventListener("click", togglePlay);
+  function togglePlay() {
+    if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
+    else { video.pause(); playBtn.innerHTML = '<i class="fas fa-play"></i>'; }
+  }
+
+  video.addEventListener("timeupdate", () => {
+    if (video.duration) {
+      const percent = (video.currentTime / video.duration) * 100;
+      progressBar.style.width = `${percent}%`;
+      const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+      timeDisplay.textContent = `${fmt(video.currentTime)} / ${fmt(video.duration)}`;
     }
+  });
 
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage(); });
+  progressContainer.addEventListener("click", (e) => {
+    video.currentTime = (e.offsetX / progressContainer.clientWidth) * video.duration;
+  });
 
-    // Remove reply
-    removeReply.addEventListener('click', function() {
-        replyToMessage = null;
-        replyPreview.style.display = 'none';
-        chatInput.placeholder = 'Type your message...';
-    });
+  volumeSlider.addEventListener("click", (e) => {
+    video.volume = e.offsetX / volumeSlider.clientWidth;
+    volumeLevel.style.width = `${video.volume * 100}%`;
+  });
 
-    // Receive message
-    socket.on('message', ({ sender, text, replyTo }) => {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', sender===currentUser?'sent':'received');
-        
-        // Add double tap functionality for replies
-        let tapCount = 0;
-        messageDiv.addEventListener('click', function() {
-            tapCount++;
-            if(tapCount === 1) {
-                // First tap - set timeout to reset
-                const singleTap = setTimeout(() => {
-                    tapCount = 0;
-                }, 300);
-                
-                // If double tap doesn't occur, clear timeout
-                if(tapCount === 2) {
-                    clearTimeout(singleTap);
-                    tapCount = 0;
-                }
-            } else if(tapCount === 2) {
-                // Double tap detected
-                clearTimeout();
-                tapCount = 0;
-                
-                // Only allow reply to received messages
-                if(sender !== currentUser) {
-                    replyToMessage = { sender, text };
-                    replyPreviewContent.innerHTML = `<span class="reply-sender">${sender}:</span> ${text}`;
-                    replyPreview.style.display = 'block';
-                    chatInput.placeholder = `Reply to ${sender}...`;
-                    chatInput.focus();
-                }
-            }
-        });
+  fullscreenBtn.addEventListener("click", () => {
+    if (!document.fullscreenElement) video.requestFullscreen(); else document.exitFullscreen();
+  });
 
-        const now = new Date();
-        const timeString = now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
-        
-        let content = '';
-        if(replyTo) {
-            content = `
-                <div class="reply-indicator">
-                    <div class="reply-sender">Reply to ${replyTo.sender}</div>
-                    <div class="reply-text">${replyTo.text}</div>
-                </div>
-                <div class="message-sender">${sender}</div>
-                <div class="message-text">${text}</div>
-                <div class="message-time">${timeString}</div>
-            `;
-        } else {
-            content = `
-                <div class="message-sender">${sender}</div>
-                <div class="message-text">${text}</div>
-                <div class="message-time">${timeString}</div>
-            `;
-        }
-        
-        messageDiv.innerHTML = content;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
-
-    socket.on('onlineCount', count => { onlineCount.textContent = `${count} Online`; });
-
-    // ===== Video Player =====
-    playBtn.addEventListener('click', togglePlay);
-    video.addEventListener('click', togglePlay);
-    function togglePlay() {
-        if(video.paused||video.ended){ 
-            video.play(); 
-            playBtn.innerHTML='<i class="fas fa-pause"></i>'; 
-        }
-        else{ 
-            video.pause(); 
-            playBtn.innerHTML='<i class="fas fa-play"></i>'; 
-        }
-    }
-
-    video.addEventListener('timeupdate', updateProgress);
-    progressContainer.addEventListener('click', setProgress);
-    function updateProgress(){
-        if(video.duration){
-            const percent = (video.currentTime/video.duration)*100;
-            progressBar.style.width=`${percent}%`;
-            const cm = Math.floor(video.currentTime/60), cs=Math.floor(video.currentTime%60);
-            const dm = Math.floor(video.duration/60), ds=Math.floor(video.duration%60);
-            timeDisplay.textContent=`${cm}:${cs<10?'0':''}${cs} / ${dm}:${ds<10?'0':''}${ds}`;
-        }
-    }
-    function setProgress(e){ 
-        video.currentTime = (e.offsetX/progressContainer.clientWidth)*video.duration; 
-    }
-
-    volumeSlider.addEventListener('click', e => { 
-        video.volume = e.offsetX/volumeSlider.clientWidth; 
-        volumeLevel.style.width=`${video.volume*100}%`; 
-    });
-    video.volume = 0.8; 
-    volumeLevel.style.width='80%';
-
-    fullscreenBtn.addEventListener('click', ()=>{
-        const videoContainer = document.querySelector('.video-container');
-        if(!document.fullscreenElement) {
-            if(videoContainer.requestFullscreen) {
-                videoContainer.requestFullscreen();
-            } else if(videoContainer.webkitRequestFullscreen) {
-                videoContainer.webkitRequestFullscreen(); // Safari
-            } else if(videoContainer.msRequestFullscreen) {
-                videoContainer.msRequestFullscreen(); // IE/Edge
-            }
-        } else {
-            if(document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if(document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if(document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        }
-    });
-
-    video.addEventListener('waiting', ()=>{ 
-        loadingSpinner.style.display='block'; 
-        videoStatus.textContent='Buffering...'; 
-    });
-    video.addEventListener('canplay', ()=>{ 
-        loadingSpinner.style.display='none'; 
-        videoStatus.textContent='Playing'; 
-    });
-    video.addEventListener('playing', ()=>{ 
-        loadingSpinner.style.display='none'; 
-        videoStatus.textContent='Playing'; 
-    });
-    video.addEventListener('loadstart', ()=>{ 
-        videoStatus.textContent='Loading...'; 
-    });
-    video.addEventListener('pause', ()=>{ 
-        videoStatus.textContent='Paused'; 
-    });
-    video.addEventListener('ended', ()=>{ 
-        videoStatus.textContent='Ended'; 
-        playBtn.innerHTML='<i class="fas fa-play"></i>'; 
-    });
-    video.addEventListener('error', ()=>{ 
-        videoStatus.textContent='Error loading video'; 
-    });
-    
-    // Handle keyboard on mobile devices
-    chatInput.addEventListener('focus', function() {
-        // On some mobile devices, we need to ensure the input stays visible
-        setTimeout(function() {
-            chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
-    });
-    
-    // Prevent page zoom on iOS when focusing on inputs
-    document.addEventListener('touchstart', function() {}, {passive: true});
-    
-    // Video seek functionality
-    video.addEventListener('click', function(e) {
-        const videoRect = video.getBoundingClientRect();
-        const clickX = e.clientX - videoRect.left;
-        const videoWidth = videoRect.width;
-        
-        if (clickX < videoWidth / 2) {
-            // Left side clicked - seek backward
-            video.currentTime = Math.max(0, video.currentTime - 10);
-        } else {
-            // Right side clicked - seek forward
-            video.currentTime = Math.min(video.duration, video.currentTime + 10);
-        }
-    });
+  video.addEventListener("waiting", () => { loadingSpinner.style.display = "block"; videoStatus.textContent = "Buffering..."; });
+  video.addEventListener("playing", () => { loadingSpinner.style.display = "none"; videoStatus.textContent = "Playing"; });
+  video.addEventListener("pause", () => { videoStatus.textContent = "Paused"; });
 });
 </script>
 </body>
