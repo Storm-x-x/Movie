@@ -1,561 +1,1013 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Genius Player — Android App Style</title>
-
-<!-- Icons / Font -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Genius Video Player with Real Chat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* -------------------------
-   Android-App Look & Feel
-   ------------------------- */
-:root{
-  --bg1: #0b1020;
-  --bg2: #0f1a2f;
-  --glass: rgba(255,255,255,0.04);
-  --glass-strong: rgba(255,255,255,0.06);
-  --accent: #ffd54a;      /* golden accent */
-  --accent-2: #ffb74d;
-  --muted: rgba(255,255,255,0.75);
-  --card-radius: 18px;
-  --blur: 14px;
-  --safe-top: env(safe-area-inset-top, 12px);
-  --safe-bottom: env(safe-area-inset-bottom, 12px);
-  --ui-scale: 1;
-}
-
-/* Reset */
-*{box-sizing:border-box; margin:0; padding:0; font-family: 'Roboto', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-html,body{height:100%; background: linear-gradient(180deg,var(--bg1), var(--bg2)); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; -webkit-tap-highlight-color:transparent;}
-body{display:flex; align-items:flex-start; justify-content:center; padding:calc(16px + var(--safe-top)) 12px calc(12px + var(--safe-bottom)); }
-
-/* App shell */
-.app {
-  width:100%;
-  max-width:900px;
-  height:calc(100vh - (var(--safe-top) + var(--safe-bottom) + 24px));
-  border-radius:18px;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.03);
-}
-
-/* Top status bar (android style) */
-.topbar {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:10px 14px;
-  gap:12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-  backdrop-filter: blur(6px);
-}
-.app-title { display:flex; align-items:center; gap:8px; color:var(--muted); font-weight:500; font-size:15px; }
-.app-title .dot { width:10px; height:10px; background:var(--accent); border-radius:50%; box-shadow:0 0 10px rgba(255,213,74,0.25); }
-.top-actions { color:var(--muted); display:flex; gap:10px; align-items:center; }
-
-/* Content area */
-.content {
-  display:flex;
-  flex:1;
-  gap:12px;
-  padding:12px;
-}
-
-/* Video card (primary) */
-.player {
-  flex:2;
-  min-height:120px;
-  border-radius:calc(var(--card-radius) - 4px);
-  overflow:hidden;
-  position:relative;
-  background: linear-gradient(180deg, rgba(10,10,18,0.55), rgba(0,0,0,0.6));
-  border: 1px solid rgba(255,255,255,0.03);
-  backdrop-filter: blur(var(--blur));
-  display:flex;
-  flex-direction:column;
-}
-.player .meta {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:10px 12px;
-  color:var(--muted); font-weight:600;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-}
-.player .meta .title { font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%; }
-
-/* Video view */
-.video-area {
-  position:relative; flex:1; background:#000; display:flex; align-items:center; justify-content:center;
-}
-.video-area video {
-  width:100%; height:100%; object-fit:contain; display:block; background:#000;
-  -webkit-user-select:none; user-select:none;
-}
-
-/* overlay controls container (hidden/shown) */
-.controls {
-  position:absolute; left:0; right:0; bottom:0; padding:12px; display:flex; flex-direction:column; gap:12px;
-  pointer-events:none; /* buttons enable via child */
-}
-.controls .row { display:flex; align-items:center; gap:10px; pointer-events:auto; }
-
-/* progress large */
-.progress {
-  height:8px; border-radius:999px; background: rgba(255,255,255,0.06); overflow:hidden; flex:1;
-  box-shadow: inset 0 -1px 6px rgba(0,0,0,0.6);
-}
-.progress .bar { height:100%; width:0%; background:linear-gradient(90deg,var(--accent), var(--accent-2)); box-shadow:0 6px 18px rgba(255,180,60,0.12); transition:width .07s linear; }
-
-/* big playback buttons */
-.fab-row { display:flex; align-items:center; gap:10px; justify-content:center; }
-.fab {
-  width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.88));
-  color:var(--bg2); box-shadow: 0 10px 30px rgba(0,0,0,0.5); border:none; cursor:pointer; font-size:20px; transition:transform .12s;
-}
-.fab.primary { background: linear-gradient(180deg, var(--accent), var(--accent-2)); color:#101018; box-shadow: 0 10px 32px rgba(255,180,60,0.16); }
-.fab:active{ transform:scale(.98); }
-
-/* touch hit for small icons */
-.icon-btn { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.03); color:var(--muted); border:none; cursor:pointer; }
-
-/* Right column — small overlay info or desktop chat trigger */
-.side {
-  flex:1; min-width:260px; border-radius:calc(var(--card-radius) - 4px);
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
-  border: 1px solid rgba(255,255,255,0.03);
-  padding:10px; display:flex; flex-direction:column; gap:10px; backdrop-filter: blur(10px);
-}
-.side .section-title { color:var(--muted); font-weight:700; font-size:13px; }
-.side .mini { background: rgba(0,0,0,0.35); padding:10px; border-radius:12px; color:var(--muted); font-size:13px; }
-
-/* Bottom sheet chat (Android style) */
-.chat-sheet {
-  position: absolute; left:0; right:0; bottom:0; height:60vh; max-height:92vh;
-  transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.9,.2,1);
-  border-top-left-radius:20px; border-top-right-radius:20px;
-  background: linear-gradient(180deg, rgba(10,10,18,0.92), rgba(6,8,12,0.96));
-  box-shadow: 0 -20px 40px rgba(0,0,0,0.6); z-index:60; overflow:hidden;
-  display:flex; flex-direction:column;
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.03);
-}
-.chat-sheet.open { transform: translateY(0%); }
-.chat-sheet .grab { width:44px; height:6px; background: rgba(255,255,255,0.06); border-radius:6px; margin:10px auto; }
-.chat-sheet .header { padding:8px 14px; display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-weight:700; }
-.chat-body { padding:10px; overflow:auto; display:flex; flex-direction:column; gap:10px; flex:1; }
-.chat-row { max-width:86%; padding:8px 12px; border-radius:14px; background: rgba(255,255,255,0.04); color:var(--muted); align-self:flex-start; }
-.chat-row.me { align-self:flex-end; background: linear-gradient(90deg, rgba(255,213,74,0.12), rgba(255,187,80,0.06)); color:#fffbe6; }
-
-/* chat input inside sheet */
-.chat-input-wrap { display:flex; gap:8px; padding:10px; border-top:1px solid rgba(255,255,255,0.02); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
-.chat-input-wrap input { flex:1; padding:10px 12px; border-radius:999px; border:none; outline:none; background:rgba(255,255,255,0.03); color:var(--muted); }
-.chat-input-wrap button { width:48px; height:48px; border-radius:50%; border:none; background:var(--accent); color:#111; cursor:pointer; }
-
-/* Login overlay */
-.modal-overlay { position:fixed; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.7)); display:flex; align-items:center; justify-content:center; z-index:120; }
-.login-card { width:92%; max-width:420px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px; border-radius:14px; color:var(--muted); border:1px solid rgba(255,255,255,0.03); }
-.login-card h2{ font-size:20px; margin-bottom:10px; }
-.login-card input { width:100%; padding:12px; border-radius:10px; border:none; outline:none; background:rgba(255,255,255,0.02); color:var(--muted); margin-bottom:10px;}
-.login-card button { width:100%; padding:12px; border-radius:10px; border:none; background:var(--accent); color:#111; font-weight:700; cursor:pointer; }
-
-/* small helpers */
-.small { font-size:12px; color:rgba(255,255,255,0.7); }
-.center { display:flex; align-items:center; justify-content:center; }
-
-/* responsive: mobile stacks */
-@media (max-width:900px) {
-  .content { flex-direction:column; padding:8px; gap:10px; }
-  .side { order:99; min-height:0; }
-  .player { order:1; min-height:300px; }
-  .chat-sheet { height:78vh; }
-}
+    /* ====== CSS Reset & Variables ====== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    :root {
+        --primary: #1a2a6c;
+        --secondary: #b21f1f;
+        --accent: #ff6b9d; /* Changed from yellow to pink */
+        --accent-light: #ffa8c9; /* Lighter pink for highlights */
+        --accent-dark: #d94a7e; /* Darker pink for contrast */
+        --dark: rgba(30, 30, 47, 0.85); /* Added transparency */
+        --darker: rgba(45, 45, 68, 0.9); /* Added transparency */
+        --light: #ffffff;
+        --glass: rgba(255, 255, 255, 0.1); /* Glass effect */
+        --glass-border: rgba(255, 255, 255, 0.2); /* Glass border */
+    }
+    
+    /* ====== Body & Layout ====== */
+    html, body {
+        height: 100%;
+        overflow: hidden;
+    }
+    body {
+        background: linear-gradient(135deg, var(--primary), var(--secondary), #fdbb2d);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(5px); /* Background blur */
+    }
+    
+    /* ====== Main Container ====== */
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    /* ====== Video Container ====== */
+    .video-container {
+        background-color: var(--dark);
+        border-radius: 16px; /* Increased border radius */
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        height: 40%;
+        min-height: 150px;
+        backdrop-filter: blur(10px); /* Glass effect */
+        border: 1px solid var(--glass-border); /* Glass border */
+        position: relative;
+        z-index: 1;
+    }
+    .video-header {
+        padding: 8px 12px;
+        background-color: var(--darker);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--light);
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .video-title { 
+        font-size: 0.9rem;
+        font-weight: 600; 
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .video-status {
+        font-size: 0.7rem;
+        opacity: 0.8;
+    }
+    .video-wrapper { 
+        position: relative; 
+        width: 100%; 
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #000;
+    }
+    video { 
+        width: 100%; 
+        height: 100%; 
+        background-color: #000; 
+        display: block; 
+        object-fit: contain;
+    }
+    .loading-spinner {
+        position: absolute;
+        top: 50%; 
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: var(--accent);
+        animation: spin 1s ease-in-out infinite;
+        z-index: 10;
+        display: none;
+    }
+    @keyframes spin { 
+        to { transform: translate(-50%, -50%) rotate(360deg); } 
+    }
+    
+    /* ====== Video Controls ====== */
+    .video-controls {
+        padding: 6px 10px;
+        background-color: var(--darker);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .play-btn, .fullscreen-btn {
+        background-color: var(--glass); /* Glass effect */
+        border: 1px solid var(--glass-border); /* Glass border */
+        color: var(--light);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center;
+        cursor: pointer; 
+        transition: all 0.2s;
+        flex-shrink: 0;
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .play-btn:hover, .fullscreen-btn:hover { 
+        background-color: var(--accent); 
+        transform: scale(1.05); 
+        box-shadow: 0 0 10px var(--accent-light); /* Glow effect */
+    }
+    .progress-container { 
+        flex-grow: 1; 
+        height: 4px;
+        background-color: var(--glass); /* Glass effect */
+        border-radius: 2px; 
+        position: relative; 
+        cursor: pointer; 
+        min-width: 50px;
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .progress-bar { 
+        height: 100%; 
+        background: linear-gradient(90deg, var(--accent), var(--accent-light)); /* Gradient effect */
+        border-radius: 2px; 
+        width: 0%; 
+        transition: width 0.1s; 
+        box-shadow: 0 0 5px var(--accent); /* Glow effect */
+    }
+    .time-display { 
+        color: var(--light); 
+        font-size: 0.7rem;
+        min-width: 70px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    .volume-control { 
+        display: flex; 
+        align-items: center; 
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    .volume-icon { 
+        color: var(--light); 
+        font-size: 0.8rem;
+    }
+    .volume-slider { 
+        width: 40px;
+        height: 3px;
+        background-color: var(--glass); /* Glass effect */
+        border-radius: 2px; 
+        position: relative; 
+        cursor: pointer; 
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .volume-level { 
+        height: 100%; 
+        background: linear-gradient(90deg, var(--accent), var(--accent-light)); /* Gradient effect */
+        border-radius: 2px; 
+        width: 80%; 
+        box-shadow: 0 0 5px var(--accent); /* Glow effect */
+    }
+    
+    /* ====== Chat Container ====== */
+    .chat-container { 
+        background-color: var(--dark); 
+        border-radius: 16px; /* Increased border radius */
+        overflow: hidden; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+        display: flex; 
+        flex-direction: column; 
+        height: 60%;
+        min-height: 350px;
+        backdrop-filter: blur(10px); /* Glass effect */
+        border: 1px solid var(--glass-border); /* Glass border */
+        position: relative;
+        z-index: 1;
+    }
+    .chat-header { 
+        padding: 8px 10px;
+        background-color: var(--darker); 
+        color: var(--light); 
+        font-size: 0.9rem;
+        font-weight: 600; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        flex-shrink: 0;
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .online-indicator { 
+        display: flex; 
+        align-items: center; 
+        gap: 4px;
+        font-size: 0.7rem;
+        font-weight: normal; 
+    }
+    .online-dot { 
+        width: 6px;
+        height: 6px;
+        background-color: #4CAF50; 
+        border-radius: 50%; 
+        box-shadow: 0 0 5px #4CAF50; /* Glow effect */
+    }
+    .chat-messages { 
+        flex-grow: 1; 
+        padding: 10px;
+        overflow-y: auto; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 8px;
+    }
+    .message { 
+        max-width: 85%; 
+        padding: 6px 10px;
+        border-radius: 14px;
+        line-height: 1.25;
+        position: relative; 
+        word-wrap: break-word;
+        font-size: 0.8rem;
+        transition: transform 0.2s, background-color 0.2s;
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .message.received { 
+        background-color: var(--darker); 
+        color: var(--light); 
+        align-self: flex-start; 
+        border-bottom-left-radius: 4px; 
+        border: 1px solid var(--glass-border); /* Glass border */
+    }
+    .message.sent { 
+        background: linear-gradient(135deg, var(--accent), var(--accent-dark)); /* Gradient effect */
+        color: var(--light); /* Changed text color for better contrast */
+        align-self: flex-end; 
+        border-bottom-right-radius: 4px; 
+        box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3); /* Glow effect */
+    }
+    .message-sender { 
+        font-weight: 600; 
+        font-size: 0.65rem;
+        margin-bottom: 2px;
+    }
+    .message-time { 
+        font-size: 0.55rem;
+        opacity: 0.7; 
+        text-align: right; 
+        margin-top: 2px;
+    }
+    .reply-indicator {
+        position: relative;
+        padding-left: 12px;
+        border-left: 2px solid var(--accent);
+        font-size: 0.7rem;
+        margin-bottom: 4px;
+        opacity: 0.8;
+    }
+    .reply-text {
+        font-style: italic;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* ====== Reply Indicator ====== */
+    .reply-indicator {
+        display: flex;
+        flex-direction: column;
+    }
+    .reply-sender {
+        font-weight: bold;
+    }
+    
+    /* ====== Chat Input ====== */
+    .chat-input-container { 
+        padding: 8px 10px;
+        background-color: var(--darker); 
+        display: flex; 
+        gap: 5px;
+        flex-shrink: 0;
+        position: relative;
+        backdrop-filter: blur(5px); /* Glass effect */
+    }
+    .reply-preview {
+        background-color: var(--darker);
+        padding: 6px 10px;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        border-left: 2px solid var(--accent);
+        backdrop-filter: blur(5px); /* Glass effect */
+        border: 1px solid var(--glass-border); /* Glass border */
+    }
+    .reply-preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3px;
+    }
+    .remove-reply {
+        background: none;
+        border: none;
+        color: var(--light);
+        cursor: pointer;
+        font-size: 0.8rem;
+        padding: 0 5px;
+        transition: all 0.2s;
+    }
+    .remove-reply:hover {
+        color: var(--accent);
+        transform: scale(1.1);
+    }
+    .chat-input { 
+        flex-grow: 1; 
+        padding: 6px 10px;
+        border: none; 
+        border-radius: 16px;
+        background-color: var(--dark); 
+        color: var(--light); 
+        outline: none; 
+        font-size: 0.8rem;
+        backdrop-filter: blur(5px); /* Glass effect */
+        border: 1px solid var(--glass-border); /* Glass border */
+        transition: all 0.2s;
+    }
+    .chat-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 5px var(--accent-light);
+    }
+    .send-btn { 
+        background: linear-gradient(135deg, var(--accent), var(--accent-dark)); /* Gradient effect */
+        border: none; 
+        color: var(--light); 
+        width: 32px;
+        height: 32px; 
+        border-radius: 50%; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3); /* Glow effect */
+    }
+    .send-btn:hover { 
+        background: linear-gradient(135deg, var(--accent-light), var(--accent)); /* Gradient effect */
+        transform: scale(1.05); 
+        box-shadow: 0 0 10px var(--accent-light); /* Enhanced glow effect */
+    }
+    
+    /* ====== Login Modal ====== */
+    .modal-overlay { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        right: 0; 
+        bottom: 0; 
+        background-color: rgba(0,0,0,0.7); 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        z-index: 1000; 
+        backdrop-filter: blur(10px); /* Glass effect */
+    }
+    .login-modal { 
+        background-color: var(--dark); 
+        padding: 18px;
+        border-radius: 16px; /* Increased border radius */
+        width: 90%; 
+        max-width: 350px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        backdrop-filter: blur(10px); /* Glass effect */
+        border: 1px solid var(--glass-border); /* Glass border */
+    }
+    .login-title { 
+        color: var(--light); 
+        text-align: center; 
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+    }
+    .login-form { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px;
+    }
+    .form-group { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 3px;
+    }
+    .form-label { 
+        color: var(--light); 
+        font-size: 0.8rem;
+    }
+    .form-input { 
+        padding: 8px 10px;
+        border-radius: 8px; 
+        border: 1px solid var(--glass-border); /* Glass border */
+        background-color: var(--darker); 
+        color: var(--light); 
+        outline: none; 
+        backdrop-filter: blur(5px); /* Glass effect */
+        transition: all 0.2s;
+    }
+    .form-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 5px var(--accent-light);
+    }
+    .login-btn { 
+        background: linear-gradient(135deg, var(--accent), var(--accent-dark)); /* Gradient effect */
+        color: var(--light); 
+        border: none; 
+        padding: 8px;
+        border-radius: 8px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+        margin-top: 6px;
+        box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3); /* Glow effect */
+    }
+    .login-btn:hover { 
+        background: linear-gradient(135deg, var(--accent-light), var(--accent)); /* Gradient effect */
+        box-shadow: 0 0 10px var(--accent-light); /* Enhanced glow effect */
+    }
+    
+    /* ====== Responsive Design ====== */
+    /* Desktop Layout */
+    @media (min-width: 992px) { 
+        .container { 
+            flex-direction: row; 
+            height: 95vh;
+            max-height: 800px;
+            padding: 20px;
+            gap: 20px;
+        } 
+        .video-container { 
+            flex: 2; 
+            height: auto;
+        } 
+        .chat-container { 
+            flex: 1; 
+            height: auto;
+        }
+        
+        /* Larger controls on desktop */
+        .video-header {
+            padding: 15px 20px;
+        }
+        .video-title {
+            font-size: 1.2rem;
+        }
+        .video-controls {
+            padding: 15px 20px;
+            gap: 15px;
+        }
+        .play-btn, .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+        }
+        .volume-slider {
+            width: 80px;
+        }
+        .time-display {
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+        .chat-header {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+        }
+        .chat-input-container {
+            padding: 15px 20px;
+            gap: 10px;
+        }
+        .send-btn {
+            width: 44px;
+            height: 44px;
+        }
+    }
+    
+    /* Tablet adjustments */
+    @media (max-width: 768px) and (min-width: 577px) {
+        .container {
+            height: 95vh;
+            max-height: none;
+        }
+        .video-header, .video-controls {
+            padding: 12px 15px;
+        }
+        .volume-slider {
+            width: 70px;
+        }
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 576px) {
+        .container {
+            padding: 8px;
+            gap: 8px;
+            height: 100%;
+        }
+        .video-header, .video-controls {
+            padding: 8px 12px;
+        }
+        .video-title {
+            font-size: 1rem;
+        }
+        .video-status {
+            font-size: 0.75rem;
+        }
+        .time-display {
+            min-width: 80px;
+            font-size: 0.75rem;
+        }
+        .volume-slider {
+            width: 50px;
+        }
+        .chat-container {
+            min-height: 320px;
+        }
+        .chat-header {
+            padding: 10px 12px;
+            font-size: 1rem;
+        }
+        .chat-messages {
+            padding: 12px;
+        }
+        .chat-input-container {
+            padding: 10px 12px;
+        }
+        .message {
+            max-width: 90%;
+        }
+        
+        /* Hide volume control on very small screens */
+        @media (max-width: 380px) {
+            .volume-control {
+                display: none;
+            }
+        }
+    }
+    
+    /* Very short screens */
+    @media (max-height: 600px) {
+        .chat-container {
+            min-height: 220px;
+        }
+        .chat-messages {
+            padding: 10px;
+            gap: 8px;
+        }
+        .message {
+            padding: 8px 12px;
+        }
+    }
+    
+    /* Fullscreen styles */
+    .video-container:fullscreen {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+    }
+    
+    .video-container:fullscreen .video-wrapper {
+        flex: 1;
+    }
+    
+    /* Prevent iOS zoom on input focus */
+    input, textarea {
+        font-size: 16px;
+    }
+    
+    /* Enhanced tap feedback */
+    .message {
+        cursor: pointer;
+        transition: transform 0.1s, background-color 0.2s;
+    }
+    
+    .message:active {
+        transform: scale(0.98);
+    }
+    
+    .play-btn:active, .fullscreen-btn:active, .send-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Heart animation for double tap */
+    @keyframes heartBeat {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+    
+    .heart-animation {
+        position: absolute;
+        color: var(--accent);
+        font-size: 24px;
+        pointer-events: none;
+        animation: heartBeat 0.6s ease-out;
+        z-index: 100;
+    }
 </style>
 </head>
 <body>
-
-<!-- LOGIN / ONBOARD -->
-<div id="loginModal" class="modal-overlay">
-  <div class="login-card" role="dialog" aria-modal="true">
-    <h2>Welcome — Join Chat</h2>
-    <input id="usernameInput" type="text" placeholder="Enter display name" maxlength="30" />
-    <button id="joinBtn">Enter App</button>
-  </div>
+<!-- Login Modal -->
+<div class="modal-overlay" id="loginModal">
+    <div class="login-modal">
+        <h2 class="login-title">Join the Chat</h2>
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="username">Your Name</label>
+                <input type="text" class="form-input" id="username" placeholder="Enter your name" required autofocus>
+            </div>
+            <button type="submit" class="login-btn">Join Chat</button>
+        </form>
+    </div>
 </div>
 
-<!-- APP SHELL -->
-<div class="app" id="app" aria-hidden="true">
-
-  <!-- Topbar (android style) -->
-  <div class="topbar">
-    <div class="app-title"><span class="dot"></span> Genius Player</div>
-    <div class="top-actions">
-      <button id="toggleChatBtn" class="icon-btn" title="Chat"><i class="fas fa-comments"></i></button>
-      <button id="castBtn" class="icon-btn" title="Cast"><i class="fas fa-tv"></i></button>
-      <button id="settingsBtn" class="icon-btn" title="Settings"><i class="fas fa-gear"></i></button>
-    </div>
-  </div>
-
-  <!-- Content -->
-  <div class="content">
-
-    <!-- Player -->
-    <div class="player" id="playerCard">
-      <div class="meta">
-        <div class="title" id="videoTitle">Genius Video Player • Android UI</div>
-        <div class="small" id="videoStatus">Ready</div>
-      </div>
-
-      <div class="video-area" id="videoArea">
-        <!-- Video element -->
-        <video id="video"
-               playsinline
-               webkit-playsinline
-               crossorigin="anonymous"
-               preload="metadata"
-               poster=""
-               src="http://172.174.228.24:8089/video">
-          Your browser doesn't support the video tag.
-        </video>
-
-        <!-- central overlay big play on idle -->
-        <div id="centerPlay" class="center" style="position:absolute; inset:0; pointer-events:none;">
-          <button id="centerFab" class="fab primary" style="pointer-events:auto; opacity:0.98;"><i class="fas fa-play"></i></button>
+<!-- Main Content -->
+<div class="container" id="mainContainer" style="display:none;">
+    <div class="video-container">
+        <div class="video-header">
+            <div class="video-title">Genius Video Player</div>
+            <div class="video-status">Ready to play</div>
         </div>
-
-        <!-- Controls overlay (bottom) -->
-        <div class="controls" id="controls">
-          <div class="row">
-            <div class="icon-btn" id="rewBtn" title="Rewind 10s"><i class="fas fa-rotate-left"></i></div>
-            <div class="icon-btn" id="ffBtn" title="Forward 10s"><i class="fas fa-rotate-right"></i></div>
-            <div class="progress" id="progressBarWrap" aria-hidden="false">
-              <div class="bar" id="progressBar"></div>
+        <div class="video-wrapper">
+            <video id="videoPlayer">
+                <source src="https://manifest.googlevideo.com/api/manifest/hls_playlist/expire/1761763703/ei/Fw0CafvoIv3apt8P79v1-AU/ip/208.77.246.46/id/9901e19d833cdb53/itag/95/source/youtube/requiressl/yes/ratebypass/yes/pfa/1/sgoap/clen%3D102983567%3Bdur%3D6363.288%3Bgir%3Dyes%3Bitag%3D140%3Blmt%3D1752377134858261/sgovp/clen%3D372929551%3Bdur%3D6363.200%3Bgir%3Dyes%3Bitag%3D136%3Blmt%3D1752433854632486/rqh/1/hls_chunk_host/rr5---sn-npoeenez.googlevideo.com/xpc/EgVo2aDSNQ%3D%3D/met/1761742103,/mh/8F/mm/31,29/mn/sn-npoeenez,sn-npoe7nsr/ms/au,rdu/mv/m/mvi/5/pl/23/rms/au,au/initcwndbps/12696250/siu/1/bui/AdEuB5SFZULlbfCMRiE3rxvSsNDXZql81_-RuWQYlQf7trJodWJ2EjFVI5AL3b45SGyUjkiAgw/spc/6b0G_PEmEfNfzDSuQ8FSJowKOSEtcjM7DsdWTznAYyaO7bRUMC94oXFq3DKe9-wYhWYGmA/vprv/1/playlist_type/CLEAN/dover/11/txp/5535534/mt/1761741710/fvip/4/keepalive/yes/fexp/51355912,51552689,51565116,51565682,51580968/sparams/expire,ei,ip,id,itag,source,requiressl,ratebypass,pfa,sgoap,sgovp,rqh,xpc,siu,bui,spc,vprv,playlist_type/sig/AJfQdSswRgIhAN8DYi40srzqkppMtpb4AGCEVteqmR7lx_56Rh5WJlHFAiEA3Nu07wPG939lxqUvFaSSoC7KBjEY2Y3NEv0XvsgLbrU%3D/lsparams/hls_chunk_host,met,mh,mm,mn,ms,mv,mvi,pl,rms,initcwndbps/lsig/APaTxxMwRAIgbjspvySGnQ_M6QRvfhMmUkn_efSRfQnFZXslFVeep7gCIDIelbzx2EBzDrkVEn3xwCRz95Mlk9k5C2vEypZ9F0_8/playlist/index.m3u8" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="loading-spinner" id="loadingSpinner"></div>
+        </div>
+        <div class="video-controls">
+            <button class="play-btn" id="playBtn"><i class="fas fa-play"></i></button>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
-            <div class="small" id="timeLabel">0:00 / 0:00</div>
-          </div>
-
-          <div class="row fab-row">
-            <button class="fab" id="skipBack"><i class="fas fa-backward"></i></button>
-            <button class="fab primary" id="playBtnLarge" title="Play/Pause"><i class="fas fa-play"></i></button>
-            <button class="fab" id="skipNext"><i class="fas fa-forward"></i></button>
-          </div>
-
-        </div> <!-- controls -->
-
-        <!-- loading spinner -->
-        <div id="spinner" style="position:absolute; left:calc(50% - 28px); top:calc(50% - 28px); width:56px; height:56px; border-radius:50%; border:5px solid rgba(255,255,255,0.08); border-top-color:var(--accent); animation:spin 1s linear infinite; display:none;"></div>
-
-      </div> <!-- video-area -->
-    </div> <!-- player -->
-
-    <!-- Side column (info & quick actions) -->
-    <div class="side">
-      <div class="section-title">Now Playing</div>
-      <div class="mini">
-        <div id="nowPlayingText">Genius Live Stream</div>
-        <div class="small" style="margin-top:6px;">Tap video to play/pause. Double-tap left/right to skip 10s. Pull up chat below.</div>
-      </div>
-
-      <div class="section-title">Quick Controls</div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="icon-btn" id="muteBtn" title="Mute/Unmute"><i class="fas fa-volume-high"></i></button>
-        <button class="icon-btn" id="qualityBtn" title="Quality"><i class="fas fa-layer-group"></i></button>
-        <button class="icon-btn" id="downloadBtn" title="Download"><i class="fas fa-download"></i></button>
-      </div>
-
-      <div style="margin-top:auto;">
-        <div class="section-title">Device</div>
-        <div class="mini">Android-style UI • Touch optimized • Full-screen capable</div>
-      </div>
+            <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+            <div class="volume-control">
+                <div class="volume-icon"><i class="fas fa-volume-up"></i></div>
+                <div class="volume-slider" id="volumeSlider">
+                    <div class="volume-level" id="volumeLevel"></div>
+                </div>
+            </div>
+            <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
+        </div>
     </div>
 
-  </div> <!-- content -->
-
-  <!-- Chat bottom sheet -->
-  <div class="chat-sheet" id="chatSheet" aria-hidden="true">
-    <div class="grab"></div>
-    <div class="header">
-      <div>Live Chat</div>
-      <div class="small"><span id="onlineCount">1</span> online</div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <span>Chat Room - <span id="userNameDisplay">User</span></span>
+            <div class="online-indicator">
+                <div class="online-dot"></div>
+                <span id="onlineCount">1 Online</span>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-container">
+            <div id="replyPreview" class="reply-preview" style="display: none;">
+                <div class="reply-preview-header">
+                    <span>Replying to:</span>
+                    <button class="remove-reply" id="removeReply"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="replyPreviewContent"></div>
+            </div>
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
     </div>
+</div>
 
-    <div class="chat-body" id="chatBody">
-      <!-- messages injected here -->
-    </div>
-
-    <div class="chat-input-wrap">
-      <input id="chatInput" type="text" placeholder="Say something..." />
-      <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
-    </div>
-  </div>
-
-</div> <!-- app -->
-
-<!-- Socket.io (if available on server) -->
+<!-- Socket.IO -->
 <script src="/socket.io/socket.io.js"></script>
-
 <script>
-/* -------------------------
-   App Script (single-file)
-   ------------------------- */
+document.addEventListener('DOMContentLoaded', function() {
+    const loginModal = document.getElementById('loginModal');
+    const mainContainer = document.getElementById('mainContainer');
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const onlineCount = document.getElementById('onlineCount');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const replyPreview = document.getElementById('replyPreview');
+    const replyPreviewContent = document.getElementById('replyPreviewContent');
+    const removeReply = document.getElementById('removeReply');
 
-(() => {
-  // Elements
-  const loginModal = document.getElementById('loginModal');
-  const joinBtn = document.getElementById('joinBtn');
-  const usernameInput = document.getElementById('usernameInput');
-  const app = document.getElementById('app');
-  const video = document.getElementById('video');
-  const playBtnLarge = document.getElementById('playBtnLarge');
-  const centerFab = document.getElementById('centerFab');
-  const spinner = document.getElementById('spinner');
-  const progressBar = document.getElementById('progressBar');
-  const progressBarWrap = document.getElementById('progressBarWrap');
-  const timeLabel = document.getElementById('timeLabel');
-  const chatSheet = document.getElementById('chatSheet');
-  const toggleChatBtn = document.getElementById('toggleChatBtn');
-  const chatBody = document.getElementById('chatBody');
-  const chatInput = document.getElementById('chatInput');
-  const sendChatBtn = document.getElementById('sendChatBtn');
-  const onlineCountEl = document.getElementById('onlineCount');
-  const videoStatus = document.getElementById('videoStatus');
-  const centerPlayContainer = document.getElementById('centerPlay');
+    // Video elements
+    const video = document.getElementById('videoPlayer');
+    const playBtn = document.getElementById('playBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeLevel = document.getElementById('volumeLevel');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const videoStatus = document.querySelector('.video-status');
 
-  // optional socket (if server available)
-  let socket;
-  try { socket = io(); } catch(e){ socket = null; }
+    let currentUser = '';
+    let replyToMessage = null;
 
-  // state
-  let username = '';
-  let isChatOpen = false;
-  let dragging = false;
-  let lastTap = 0;
+    // Connect to server
+    const socket = io();
 
-  // Utilities
-  function fmtTime(t) {
-    if (isNaN(t) || !isFinite(t)) return '0:00';
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return m + ':' + String(s).padStart(2, '0');
-  }
-
-  // LOGIN flow
-  joinBtn.addEventListener('click', () => {
-    const val = usernameInput.value.trim() || ('User' + Math.floor(Math.random()*999));
-    username = val;
-    loginModal.style.display = 'none';
-    app.setAttribute('aria-hidden', 'false');
-    if (socket) socket.emit('join', username);
-  });
-
-  // Play/Pause
-  function updatePlayUI(){
-    if (video.paused) {
-      playBtnLarge.innerHTML = '<i class="fas fa-play"></i>';
-      centerFab.innerHTML = '<i class="fas fa-play"></i>';
-      centerPlayContainer.style.display = 'flex';
-    } else {
-      playBtnLarge.innerHTML = '<i class="fas fa-pause"></i>';
-      centerFab.innerHTML = '<i class="fas fa-pause"></i>';
-      centerPlayContainer.style.display = 'none';
-    }
-  }
-  function togglePlay(){
-    if (video.paused) {
-      video.play().catch(()=>{ /* autoplay blocked */ });
-    } else video.pause();
-    updatePlayUI();
-  }
-  playBtnLarge.addEventListener('click', togglePlay);
-  centerFab.addEventListener('click', togglePlay);
-
-  // Video events
-  video.addEventListener('waiting', ()=> { spinner.style.display='block'; videoStatus.innerText = 'Buffering...'; });
-  video.addEventListener('playing', ()=> { spinner.style.display='none'; videoStatus.innerText = 'Playing'; updatePlayUI(); });
-  video.addEventListener('pause', ()=> { videoStatus.innerText = 'Paused'; updatePlayUI(); });
-  video.addEventListener('loadedmetadata', ()=> {
-    timeLabel.innerText = fmtTime(0) + ' / ' + fmtTime(video.duration);
-  });
-
-  // timeupdate -> progress
-  video.addEventListener('timeupdate', ()=> {
-    if (!video.duration) return;
-    const pct = (video.currentTime / video.duration) * 100;
-    progressBar.style.width = pct + '%';
-    timeLabel.innerText = fmtTime(video.currentTime) + ' / ' + fmtTime(video.duration);
-  });
-
-  // click to seek on progress
-  progressBarWrap.addEventListener('click', (ev) => {
-    const rect = progressBarWrap.getBoundingClientRect();
-    const x = (ev.clientX - rect.left);
-    const pct = Math.min(1, Math.max(0, x / rect.width));
-    if (video.duration) video.currentTime = pct * video.duration;
-  });
-
-  // double-tap gesture for skipping and single tap toggle controls
-  document.getElementById('videoArea').addEventListener('click', (ev) => {
-    const now = Date.now();
-    const dt = now - lastTap;
-    lastTap = now;
-    // determine touch X to decide left/right
-    const rect = ev.currentTarget.getBoundingClientRect();
-    const x = ev.clientX - rect.left;
-    if (dt < 300) {
-      // double-tap
-      if (x < rect.width / 2) { video.currentTime = Math.max(0, video.currentTime - 10); flashHint('-10s'); }
-      else { video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10); flashHint('+10s'); }
-    } else {
-      // single tap toggles play
-      // small delay to ensure not double-counting
-      setTimeout(()=>{
-        if (Date.now() - lastTap >= 250) togglePlay();
-      }, 260);
-    }
-  });
-
-  // Double small skip buttons
-  document.getElementById('rewBtn').addEventListener('click', ()=> { video.currentTime = Math.max(0, video.currentTime - 10); });
-  document.getElementById('ffBtn').addEventListener('click', ()=> { video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10); });
-  document.getElementById('skipBack').addEventListener('click', ()=> { video.currentTime = Math.max(0, video.currentTime - 15); });
-  document.getElementById('skipNext').addEventListener('click', ()=> { video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 15); });
-
-  // Fullscreen on double-tap two-fingers? also support fullscreen button via long-press on center fab
-  centerFab.addEventListener('contextmenu', (e)=>{ e.preventDefault(); toggleFullscreen(); });
-
-  function toggleFullscreen(){
-    const el = document.documentElement;
-    if (!document.fullscreenElement) {
-      const p = document.getElementById('app');
-      if (p.requestFullscreen) p.requestFullscreen(); else if (p.webkitRequestFullscreen) p.webkitRequestFullscreen();
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
-    }
-  }
-
-  // small flash hint on skip
-  function flashHint(txt){
-    let hint = document.createElement('div'); hint.style.position='absolute';
-    hint.style.left='50%'; hint.style.top='30%'; hint.style.transform='translateX(-50%)';
-    hint.style.padding='10px 14px'; hint.style.borderRadius='8px';
-    hint.style.background='rgba(0,0,0,0.6)'; hint.style.color='white'; hint.style.fontWeight='700';
-    hint.style.zIndex=999; hint.innerText=txt; hint.style.opacity='0'; hint.style.transition='all .25s';
-    document.getElementById('videoArea').appendChild(hint);
-    requestAnimationFrame(()=>{ hint.style.opacity='1'; hint.style.transform='translateX(-50%) translateY(-6px)'; });
-    setTimeout(()=>{ hint.style.opacity='0'; hint.style.transform='translateX(-50%) translateY(-20px)'; setTimeout(()=>hint.remove(),260); },700);
-  }
-
-  // Chat sheet open/close & drag
-  toggleChatBtn.addEventListener('click', ()=> toggleChat());
-  function toggleChat(open) {
-    isChatOpen = typeof open === 'boolean' ? open : !isChatOpen;
-    chatSheet.classList.toggle('open', isChatOpen);
-    chatSheet.setAttribute('aria-hidden', !isChatOpen);
-  }
-
-  // Dragging the sheet (touch)
-  let startY = 0, startTrans = 0, sheetH = 0;
-  chatSheet.addEventListener('touchstart', (e)=>{
-    dragging = true; startY = e.touches[0].clientY; sheetH = chatSheet.getBoundingClientRect().height;
-    chatSheet.style.transition = 'none';
-    startTrans = chatSheet.classList.contains('open') ? 0 : 1;
-  });
-  chatSheet.addEventListener('touchmove', (e)=>{
-    if (!dragging) return;
-    const dy = e.touches[0].clientY - startY;
-    const pct = Math.min(Math.max(dy / sheetH, -1), 1); // negative = dragging up
-    const t = startTrans + (pct);
-    const translate = Math.min(1, Math.max(0, 1 - t)); // map to 0..1 where 1 = closed
-    chatSheet.style.transform = `translateY(${translate * 100}%)`;
-  });
-  chatSheet.addEventListener('touchend', (e)=>{
-    dragging = false;
-    chatSheet.style.transition = '';
-    const rect = chatSheet.getBoundingClientRect();
-    const visible = (window.innerHeight - rect.top) / rect.height;
-    toggleChat(visible > 0.45);
-  });
-
-  // Send chat
-  function appendChat(sender, text, me=false){
-    const r = document.createElement('div');
-    r.className = 'chat-row' + (me ? ' me' : '');
-    r.innerHTML = `<div style="font-weight:700; font-size:13px; margin-bottom:6px;">${sender}</div><div>${escapeHtml(text)}</div><div class="small" style="margin-top:6px; text-align:right;">${(new Date()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
-    chatBody.appendChild(r);
-    chatBody.scrollTop = chatBody.scrollHeight;
-  }
-  function escapeHtml(s){ return (s+'').replace(/[&<>"'`]/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;', '`':'&#96;' })[m]); }
-
-  sendChatBtn.addEventListener('click', ()=> {
-    const txt = chatInput.value.trim();
-    if (!txt) return;
-    appendChat(username || 'Me', txt, true);
-    if (socket) socket.emit('chatMessage', { sender: username, text: txt });
-    chatInput.value = '';
-  });
-  chatInput.addEventListener('keypress', (e)=> { if (e.key === 'Enter') sendChatBtn.click(); });
-
-  // Socket events (if available)
-  if (socket) {
-    socket.on('connect', ()=> console.log('socket connected'));
-    socket.on('message', (data)=> {
-      // data expected { sender, text }
-      appendChat(data.sender || 'Anon', data.text || '');
+    // Login
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = usernameInput.value.trim();
+        if(!username) return;
+        currentUser = username;
+        userNameDisplay.textContent = username;
+        loginModal.style.display = 'none';
+        mainContainer.style.display = 'flex';
+        socket.emit('join', username);
+        chatInput.focus();
     });
-    socket.on('onlineCount', (n)=> { onlineCountEl.innerText = n; });
-    socket.on('chatMessage', (data)=> { appendChat(data.sender||'Anon', data.text||''); });
-  }
 
-  // Small helpers
-  document.getElementById('muteBtn').addEventListener('click', ()=>{
-    video.muted = !video.muted;
-    document.getElementById('muteBtn').innerHTML = video.muted ? '<i class="fas fa-volume-xmark"></i>' : '<i class="fas fa-volume-high"></i>';
-  });
+    // Send message
+    function sendMessage() {
+        const messageText = chatInput.value.trim();
+        if(!messageText) return;
+        
+        if(replyToMessage) {
+            // Send reply message
+            socket.emit('chatMessage', {
+                text: messageText,
+                replyTo: {
+                    sender: replyToMessage.sender,
+                    text: replyToMessage.text
+                }
+            });
+            // Reset reply
+            replyToMessage = null;
+            replyPreview.style.display = 'none';
+            chatInput.placeholder = 'Type your message...';
+        } else {
+            // Send regular message
+            socket.emit('chatMessage', messageText);
+        }
+        
+        chatInput.value = '';
+    }
 
-  // keyboard: space toggles play for desktop dev
-  window.addEventListener('keydown', (e)=> {
-    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-    else if (e.code === 'KeyM') { video.muted = !video.muted; }
-  });
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage(); });
 
-  // small UX: hide controls after few seconds of inactivity (on mobile)
-  let controlTimer;
-  function showControlsTemporarily() {
-    document.getElementById('controls').style.opacity = '1';
-    centerPlayContainer.style.display = video.paused ? 'flex' : 'none';
-    clearTimeout(controlTimer);
-    controlTimer = setTimeout(()=> {
-      document.getElementById('controls').style.opacity = '0.0';
-      if (video.paused) centerPlayContainer.style.display = 'flex';
-    }, 3500);
-  }
-  // initial show
-  showControlsTemporarily();
-  document.getElementById('videoArea').addEventListener('touchstart', showControlsTemporarily);
-  document.getElementById('videoArea').addEventListener('mousemove', showControlsTemporarily);
+    // Remove reply
+    removeReply.addEventListener('click', function() {
+        replyToMessage = null;
+        replyPreview.style.display = 'none';
+        chatInput.placeholder = 'Type your message...';
+    });
 
-  // small visual spin keyframes
-  const s = document.createElement('style'); s.innerHTML = '@keyframes spin { to { transform: rotate(360deg); } }'; document.head.appendChild(s);
+    // Create heart animation
+    function createHeartAnimation(x, y) {
+        const heart = document.createElement('div');
+        heart.innerHTML = '<i class="fas fa-heart"></i>';
+        heart.classList.add('heart-animation');
+        heart.style.left = `${x}px`;
+        heart.style.top = `${y}px`;
+        document.body.appendChild(heart);
+        
+        setTimeout(() => {
+            heart.remove();
+        }, 600);
+    }
 
-  // Optional: autoplay muted on mobile friendly
-  try { video.volume = 0.8; } catch(e) {}
+    // Receive message
+    socket.on('message', ({ sender, text, replyTo }) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender===currentUser?'sent':'received');
+        
+        // Add double tap functionality for replies
+        let tapCount = 0;
+        let tapTimeout;
+        
+        messageDiv.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            tapCount++;
+            
+            if(tapCount === 1) {
+                tapTimeout = setTimeout(() => {
+                    tapCount = 0;
+                }, 300);
+            } else if(tapCount === 2) {
+                clearTimeout(tapTimeout);
+                tapCount = 0;
+                
+                // Create heart animation at tap position
+                const touch = e.touches[0] || e.changedTouches[0];
+                createHeartAnimation(touch.clientX - 12, touch.clientY - 12);
+                
+                // Only allow reply to received messages
+                if(sender !== currentUser) {
+                    replyToMessage = { sender, text };
+                    replyPreviewContent.innerHTML = `<span class="reply-sender">${sender}:</span> ${text}`;
+                    replyPreview.style.display = 'block';
+                    chatInput.placeholder = `Reply to ${sender}...`;
+                    chatInput.focus();
+                }
+            }
+        });
+        
+        messageDiv.addEventListener('click', function(e) {
+            tapCount++;
+            
+            if(tapCount === 1) {
+                tapTimeout = setTimeout(() => {
+                    tapCount = 0;
+                }, 300);
+            } else if(tapCount === 2) {
+                clearTimeout(tapTimeout);
+                tapCount = 0;
+                
+                // Create heart animation at click position
+                createHeartAnimation(e.clientX - 12, e.clientY - 12);
+                
+                // Only allow reply to received messages
+                if(sender !== currentUser) {
+                    replyToMessage = { sender, text };
+                    replyPreviewContent.innerHTML = `<span class="reply-sender">${sender}:</span> ${text}`;
+                    replyPreview.style.display = 'block';
+                    chatInput.placeholder = `Reply to ${sender}...`;
+                    chatInput.focus();
+                }
+            }
+        });
 
-  // preload poster or test
-  video.addEventListener('error', ()=> {
-    videoStatus.innerText = 'Error loading video';
-  });
+        const now = new Date();
+        const timeString = now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
+        
+        let content = '';
+        if(replyTo) {
+            content = `
+                <div class="reply-indicator">
+                    <div class="reply-sender">Reply to ${replyTo.sender}</div>
+                    <div class="reply-text">${replyTo.text}</div>
+                </div>
+                <div class="message-sender">${sender}</div>
+                <div class="message-text">${text}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+        } else {
+            content = `
+                <div class="message-sender">${sender}</div>
+                <div class="message-text">${text}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+        }
+        
+        messageDiv.innerHTML = content;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
 
-  // If socket not present, show offline note in chat
-  if (!socket) {
-    appendChat('System', 'Realtime chat not available (no socket.io server). Use local mode.', false);
-  }
+    socket.on('onlineCount', count => { onlineCount.textContent = `${count} Online`; });
 
-})(); // IIFE
+    // ===== Video Player =====
+    playBtn.addEventListener('click', togglePlay);
+    video.addEventListener('click', togglePlay);
+    function togglePlay() {
+        if(video.paused||video.ended){ 
+            video.play(); 
+            playBtn.innerHTML='<i class="fas fa-pause"></i>'; 
+        }
+        else{ 
+            video.pause(); 
+            playBtn.innerHTML='<i class="fas fa-play"></i>'; 
+        }
+    }
+
+    video.addEventListener('timeupdate', updateProgress);
+    progressContainer.addEventListener('click', setProgress);
+    function updateProgress(){
+        if(video.duration){
+            const percent = (video.currentTime/video.duration)*100;
+            progressBar.style.width=`${percent}%`;
+            const cm = Math.floor(video.currentTime/60), cs=Math.floor(video.currentTime%60);
+            const dm = Math.floor(video.duration/60), ds=Math.floor(video.duration%60);
+            timeDisplay.textContent=`${cm}:${cs<10?'0':''}${cs} / ${dm}:${ds<10?'0':''}${ds}`;
+        }
+    }
+    function setProgress(e){ 
+        video.currentTime = (e.offsetX/progressContainer.clientWidth)*video.duration; 
+    }
+
+    volumeSlider.addEventListener('click', e => { 
+        video.volume = e.offsetX/volumeSlider.clientWidth; 
+        volumeLevel.style.width=`${video.volume*100}%`; 
+    });
+    video.volume = 0.8; 
+    volumeLevel.style.width='80%';
+
+    fullscreenBtn.addEventListener('click', ()=>{
+        const videoContainer = document.querySelector('.video-container');
+        if(!document.fullscreenElement) {
+            if(videoContainer.requestFullscreen) {
+                videoContainer.requestFullscreen();
+            } else if(videoContainer.webkitRequestFullscreen) {
+                videoContainer.webkitRequestFullscreen(); // Safari
+            } else if(videoContainer.msRequestFullscreen) {
+                videoContainer.msRequestFullscreen(); // IE/Edge
+            }
+        } else {
+            if(document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if(document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if(document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    });
+
+    video.addEventListener('waiting', ()=>{ 
+        loadingSpinner.style.display='block'; 
+        videoStatus.textContent='Buffering...'; 
+    });
+    video.addEventListener('canplay', ()=>{ 
+        loadingSpinner.style.display='none'; 
+        videoStatus.textContent='Playing'; 
+    });
+    video.addEventListener('playing', ()=>{ 
+        loadingSpinner.style.display='none'; 
+        videoStatus.textContent='Playing'; 
+    });
+    video.addEventListener('loadstart', ()=>{ 
+        videoStatus.textContent='Loading...'; 
+    });
+    video.addEventListener('pause', ()=>{ 
+        videoStatus.textContent='Paused'; 
+    });
+    video.addEventListener('ended', ()=>{ 
+        videoStatus.textContent='Ended'; 
+        playBtn.innerHTML='<i class="fas fa-play"></i>'; 
+    });
+    video.addEventListener('error', ()=>{ 
+        videoStatus.textContent='Error loading video'; 
+    });
+    
+    // Handle keyboard on mobile devices
+    chatInput.addEventListener('focus', function() {
+        // On some mobile devices, we need to ensure the input stays visible
+        setTimeout(function() {
+            chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+    });
+    
+    // Prevent page zoom on iOS when focusing on inputs
+    document.addEventListener('touchstart', function() {}, {passive: true});
+    
+    // Video seek functionality
+    video.addEventListener('click', function(e) {
+        const videoRect = video.getBoundingClientRect();
+        const clickX = e.clientX - videoRect.left;
+        const videoWidth = videoRect.width;
+        
+        if (clickX < videoWidth / 2) {
+            // Left side clicked - seek backward
+            video.currentTime = Math.max(0, video.currentTime - 10);
+        } else {
+            // Right side clicked - seek forward
+            video.currentTime = Math.min(video.duration, video.currentTime + 10);
+        }
+    });
+});
 </script>
 </body>
 </html>
