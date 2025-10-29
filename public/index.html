@@ -1,1451 +1,1517 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>NovaStream - Modern Video Player with Chat</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-    /* ====== CSS Reset & Variables ====== */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    :root {
-        --primary: #0f0f23;
-        --secondary: #1a1a2e;
-        --accent: #ff2e63;
-        --accent-light: #ff5c8d;
-        --accent-dark: #d91e47;
-        --dark: #16213e;
-        --darker: #0d0d1a;
-        --light: #ffffff;
-        --text-light: #e6e6ff;
-        --text-muted: #a0a0cc;
-        --success: #00d26a;
-        --warning: #ffbd44;
-        --info: #4d8cff;
-        --gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-        --glass: rgba(255, 255, 255, 0.05);
-        --glass-border: rgba(255, 255, 255, 0.1);
-        --glass-highlight: rgba(255, 255, 255, 0.1);
-        --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        --shadow-light: 0 4px 16px rgba(0, 0, 0, 0.2);
-    }
-    
-    /* ====== Body & Layout ====== */
-    html, body {
-        height: 100%;
-        overflow: hidden;
-    }
-    body {
-        background: var(--gradient);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        color: var(--text-light);
-    }
-    
-    /* Animated background */
-    .bg-animation {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-        overflow: hidden;
-    }
-    
-    .bg-dot {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        animation: float 15s infinite linear;
-    }
-    
-    @keyframes float {
-        0% {
-            transform: translateY(0) translateX(0);
-            opacity: 0;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NovaStream - Modern Video Player with Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ====== CSS Reset & Variables ====== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        10% {
-            opacity: 1;
+
+        :root {
+            --primary: #0f0f23;
+            --secondary: #1a1a2e;
+            --accent: #ff2e63;
+            --accent-light: #ff5c8d;
+            --accent-dark: #d91e47;
+            --dark: #16213e;
+            --darker: #0d0d1a;
+            --light: #ffffff;
+            --text-light: #e6e6ff;
+            --text-muted: #a0a0cc;
+            --success: #00d26a;
+            --warning: #ffbd44;
+            --info: #4d8cff;
+            --gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-light: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
-        90% {
-            opacity: 1;
+
+        /* ====== Body & Layout ====== */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
         }
-        100% {
-            transform: translateY(-100vh) translateX(100px);
-            opacity: 0;
+
+        body {
+            background: var(--gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            color: var(--text-light);
         }
-    }
-    
-    /* ====== Main Container ====== */
-    .container {
-        width: 100%;
-        max-width: 1400px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        padding: 15px;
-        z-index: 1;
-    }
-    
-    /* ====== Video Container ====== */
-    .video-container {
-        background: var(--glass);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        height: 45%;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    
-    .video-container:hover {
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        transform: translateY(-2px);
-    }
-    
-    .video-header {
-        padding: 12px 20px;
-        background: var(--glass);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: var(--text-light);
-        border-bottom: 1px solid var(--glass-border);
-    }
-    
-    .video-title { 
-        font-size: 1.1rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .video-title i {
-        color: var(--accent);
-    }
-    
-    .video-status {
-        font-size: 0.8rem;
-        opacity: 0.8;
-        background: var(--glass);
-        padding: 4px 10px;
-        border-radius: 12px;
-    }
-    
-    .video-wrapper { 
-        position: relative; 
-        width: 100%; 
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #000;
-    }
-    
-    video { 
-        width: 100%; 
-        height: 100%; 
-        background-color: #000; 
-        display: block; 
-        object-fit: contain;
-    }
-    
-    .loading-spinner {
-        position: absolute;
-        top: 50%; 
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 50px;
-        height: 50px;
-        border: 3px solid rgba(255,255,255,0.1);
-        border-radius: 50%;
-        border-top-color: var(--accent);
-        animation: spin 1s ease-in-out infinite;
-        z-index: 10;
-        display: none;
-    }
-    
-    @keyframes spin { 
-        to { transform: translate(-50%, -50%) rotate(360deg); } 
-    }
-    
-    /* ====== Video Controls ====== */
-    .video-controls {
-        padding: 12px 20px;
-        background: var(--glass);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
-        border-top: 1px solid var(--glass-border);
-    }
-    
-    .play-btn, .fullscreen-btn, .pip-btn {
-        background: var(--glass); 
-        border: 1px solid var(--glass-border); 
-        color: var(--text-light);
-        width: 36px;
-        height: 36px; 
-        border-radius: 50%; 
-        display: flex; 
-        justify-content: center; 
-        align-items: center;
-        cursor: pointer; 
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    
-    .play-btn:hover, .fullscreen-btn:hover, .pip-btn:hover { 
-        background: var(--glass-highlight); 
-        transform: scale(1.05); 
-        color: var(--accent);
-    }
-    
-    .progress-container { 
-        flex-grow: 1; 
-        height: 6px;
-        background: var(--glass); 
-        border-radius: 3px; 
-        position: relative; 
-        cursor: pointer; 
-        min-width: 50px;
-        overflow: hidden;
-    }
-    
-    .progress-bar { 
-        height: 100%; 
-        background: linear-gradient(90deg, var(--accent), var(--accent-light));
-        border-radius: 3px; 
-        width: 0%; 
-        transition: width 0.1s; 
-        position: relative;
-    }
-    
-    .progress-bar::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 10px;
-        height: 100%;
-        background: var(--light);
-        border-radius: 50%;
-        transform: translateX(50%);
-        opacity: 0.8;
-    }
-    
-    .time-display { 
-        color: var(--text-light); 
-        font-size: 0.8rem;
-        min-width: 100px;
-        text-align: center;
-        flex-shrink: 0;
-        background: var(--glass);
-        padding: 4px 10px;
-        border-radius: 12px;
-    }
-    
-    .volume-control { 
-        display: flex; 
-        align-items: center; 
-        gap: 8px;
-        flex-shrink: 0;
-    }
-    
-    .volume-icon { 
-        color: var(--text-light); 
-        font-size: 0.9rem;
-    }
-    
-    .volume-slider { 
-        width: 80px;
-        height: 4px;
-        background: var(--glass); 
-        border-radius: 2px; 
-        position: relative; 
-        cursor: pointer; 
-    }
-    
-    .volume-level { 
-        height: 100%; 
-        background: linear-gradient(90deg, var(--accent), var(--accent-light));
-        border-radius: 2px; 
-        width: 80%; 
-    }
-    
-    .settings-btn {
-        background: var(--glass);
-        border: 1px solid var(--glass-border);
-        color: var(--text-light);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    
-    .settings-btn:hover {
-        background: var(--glass-highlight);
-        transform: scale(1.05);
-        color: var(--accent);
-    }
-    
-    /* ====== Chat Container ====== */
-    .chat-container { 
-        background: var(--glass);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px; 
-        overflow: hidden; 
-        box-shadow: var(--shadow);
-        display: flex; 
-        flex-direction: column; 
-        height: 55%;
-        transition: all 0.3s ease;
-    }
-    
-    .chat-container:hover {
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        transform: translateY(-2px);
-    }
-    
-    .chat-header { 
-        padding: 12px 20px;
-        background: var(--glass); 
-        color: var(--text-light); 
-        font-size: 1.1rem;
-        font-weight: 600; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        flex-shrink: 0;
-        border-bottom: 1px solid var(--glass-border);
-    }
-    
-    .online-indicator { 
-        display: flex; 
-        align-items: center; 
-        gap: 8px;
-        font-size: 0.8rem;
-        font-weight: normal; 
-        background: var(--glass);
-        padding: 4px 12px;
-        border-radius: 12px;
-    }
-    
-    .online-dot { 
-        width: 8px;
-        height: 8px; 
-        background-color: var(--success); 
-        border-radius: 50%; 
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(0, 210, 106, 0.7); }
-        70% { box-shadow: 0 0 0 6px rgba(0, 210, 106, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(0, 210, 106, 0); }
-    }
-    
-    .chat-messages { 
-        flex-grow: 1; 
-        padding: 15px;
-        overflow-y: auto; 
-        display: flex; 
-        flex-direction: column; 
-        gap: 12px;
-    }
-    
-    /* Custom scrollbar */
-    .chat-messages::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .chat-messages::-webkit-scrollbar-track {
-        background: var(--glass);
-        border-radius: 3px;
-    }
-    
-    .chat-messages::-webkit-scrollbar-thumb {
-        background: var(--accent);
-        border-radius: 3px;
-    }
-    
-    .message { 
-        max-width: 85%; 
-        padding: 10px 15px;
-        border-radius: 18px;
-        line-height: 1.4;
-        position: relative; 
-        word-wrap: break-word;
-        font-size: 0.9rem;
-        transition: transform 0.2s, background-color 0.2s;
-        animation: messageAppear 0.3s ease-out;
-    }
-    
-    @keyframes messageAppear {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+
+        .bg-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
         }
-    }
-    
-    .message.received { 
-        background: var(--glass); 
-        color: var(--text-light); 
-        align-self: flex-start; 
-        border-bottom-left-radius: 6px; 
-        border: 1px solid var(--glass-border);
-    }
-    
-    .message.sent { 
-        background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-        color: var(--light); 
-        align-self: flex-end; 
-        border-bottom-right-radius: 6px; 
-    }
-    
-    .message-sender { 
-        font-weight: 600; 
-        font-size: 0.75rem;
-        margin-bottom: 4px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .message-time { 
-        font-size: 0.65rem;
-        opacity: 0.7; 
-        text-align: right; 
-        margin-top: 4px;
-    }
-    
-    .reply-indicator {
-        position: relative;
-        padding-left: 12px;
-        border-left: 2px solid var(--accent);
-        font-size: 0.75rem;
-        margin-bottom: 6px;
-        opacity: 0.9;
-        border-radius: 4px;
-        padding: 6px 10px;
-        background: rgba(255, 255, 255, 0.05);
-    }
-    
-    .reply-text {
-        font-style: italic;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .message-reactions {
-        display: flex;
-        gap: 4px;
-        margin-top: 6px;
-        flex-wrap: wrap;
-    }
-    
-    .reaction {
-        background: var(--glass);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 2px 6px;
-        font-size: 0.7rem;
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .reaction:hover {
-        background: var(--glass-highlight);
-        transform: scale(1.05);
-    }
-    
-    .reaction.active {
-        background: var(--accent);
-        color: var(--light);
-    }
-    
-    .reaction-count {
-        font-size: 0.65rem;
-    }
-    
-    .file-attachment {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--glass);
-        border-radius: 8px;
-        padding: 8px;
-        margin-top: 8px;
-        border: 1px solid var(--glass-border);
-    }
-    
-    .file-icon {
-        font-size: 1.2rem;
-        color: var(--accent);
-    }
-    
-    .file-info {
-        flex: 1;
-        overflow: hidden;
-    }
-    
-    .file-name {
-        font-size: 0.8rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .file-size {
-        font-size: 0.7rem;
-        opacity: 0.7;
-    }
-    
-    .download-btn {
-        background: var(--accent);
-        color: var(--light);
-        border: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        font-size: 0.7rem;
-        transition: all 0.2s;
-    }
-    
-    .download-btn:hover {
-        background: var(--accent-light);
-        transform: scale(1.1);
-    }
-    
-    /* ====== Chat Input ====== */
-    .chat-input-container { 
-        padding: 12px 20px;
-        background: var(--glass); 
-        display: flex; 
-        gap: 10px;
-        flex-shrink: 0;
-        position: relative;
-        border-top: 1px solid var(--glass-border);
-    }
-    
-    .input-actions {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-    
-    .action-btn {
-        background: var(--glass);
-        border: 1px solid var(--glass-border);
-        color: var(--text-light);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    
-    .action-btn:hover {
-        background: var(--glass-highlight);
-        transform: scale(1.05);
-        color: var(--accent);
-    }
-    
-    .reply-preview {
-        background: var(--glass);
-        padding: 8px 12px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        font-size: 0.8rem;
-        display: flex;
-        flex-direction: column;
-        border-left: 3px solid var(--accent);
-        animation: slideIn 0.3s ease-out;
-    }
-    
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .reply-preview-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 4px;
-    }
-    
-    .remove-reply {
-        background: none;
-        border: none;
-        color: var(--text-light);
-        cursor: pointer;
-        font-size: 0.8rem;
-        padding: 0 5px;
-        transition: all 0.2s;
-    }
-    
-    .remove-reply:hover {
-        color: var(--accent);
-        transform: scale(1.1);
-    }
-    
-    .chat-input { 
-        flex-grow: 1; 
-        padding: 10px 15px;
-        border: 1px solid var(--glass-border); 
-        border-radius: 20px; 
-        background: var(--glass); 
-        color: var(--text-light); 
-        outline: none; 
-        font-size: 0.9rem;
-        transition: all 0.3s;
-    }
-    
-    .chat-input:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(255, 46, 99, 0.2);
-    }
-    
-    .send-btn { 
-        background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-        border: none; 
-        color: var(--light); 
-        width: 40px;
-        height: 40px; 
-        border-radius: 50%; 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        cursor: pointer; 
-        transition: all 0.2s; 
-        flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
-    }
-    
-    .send-btn:hover { 
-        background: linear-gradient(135deg, var(--accent-light), var(--accent));
-        transform: scale(1.05); 
-        box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4);
-    }
-    
-    /* ====== Emoji Picker ====== */
-    .emoji-picker {
-        position: absolute;
-        bottom: 70px;
-        right: 20px;
-        z-index: 100;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        display: none;
-    }
-    
-    /* ====== Login Modal ====== */
-    .modal-overlay { 
-        position: fixed; 
-        top: 0; 
-        left: 0; 
-        right: 0; 
-        bottom: 0; 
-        background-color: rgba(10, 10, 20, 0.9); 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        z-index: 1000; 
-        backdrop-filter: blur(5px);
-    }
-    
-    .login-modal { 
-        background: var(--glass);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        padding: 30px;
-        border-radius: 20px;
-        width: 90%; 
-        max-width: 400px; 
-        box-shadow: var(--shadow);
-        animation: modalAppear 0.5s ease-out;
-    }
-    
-    @keyframes modalAppear {
-        from {
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-    
-    .login-title { 
-        color: var(--text-light); 
-        text-align: center; 
-        margin-bottom: 20px;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-    
-    .login-form { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 15px;
-    }
-    
-    .form-group { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 8px;
-    }
-    
-    .form-label { 
-        color: var(--text-light); 
-        font-size: 0.9rem;
-    }
-    
-    .form-input { 
-        padding: 12px 15px;
-        border-radius: 10px; 
-        border: 1px solid var(--glass-border); 
-        background: var(--glass); 
-        color: var(--text-light); 
-        outline: none; 
-        transition: all 0.3s;
-    }
-    
-    .form-input:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(255, 46, 99, 0.2);
-    }
-    
-    .login-btn { 
-        background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-        color: var(--light); 
-        border: none; 
-        padding: 12px;
-        border-radius: 10px; 
-        font-weight: 600; 
-        cursor: pointer; 
-        transition: all 0.2s; 
-        margin-top: 10px;
-        box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
-    }
-    
-    .login-btn:hover { 
-        background: linear-gradient(135deg, var(--accent-light), var(--accent));
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4);
-    }
-    
-    /* ====== File Upload Modal ====== */
-    .file-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(10, 10, 20, 0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        backdrop-filter: blur(5px);
-        display: none;
-    }
-    
-    .file-modal-content {
-        background: var(--glass);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        padding: 25px;
-        border-radius: 20px;
-        width: 90%;
-        max-width: 450px;
-        box-shadow: var(--shadow);
-        animation: modalAppear 0.5s ease-out;
-    }
-    
-    .file-modal-title {
-        color: var(--text-light);
-        text-align: center;
-        margin-bottom: 20px;
-        font-size: 1.3rem;
-        font-weight: 700;
-    }
-    
-    .file-drop-area {
-        border: 2px dashed var(--glass-border);
-        border-radius: 12px;
-        padding: 30px;
-        text-align: center;
-        transition: all 0.3s;
-        cursor: pointer;
-        margin-bottom: 20px;
-    }
-    
-    .file-drop-area:hover, .file-drop-area.active {
-        border-color: var(--accent);
-        background: rgba(255, 46, 99, 0.05);
-    }
-    
-    .file-drop-icon {
-        font-size: 2.5rem;
-        color: var(--accent);
-        margin-bottom: 10px;
-    }
-    
-    .file-drop-text {
-        color: var(--text-light);
-        margin-bottom: 5px;
-    }
-    
-    .file-drop-hint {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-    }
-    
-    .file-input {
-        display: none;
-    }
-    
-    .file-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-    }
-    
-    .cancel-btn, .upload-btn {
-        padding: 10px 20px;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: none;
-    }
-    
-    .cancel-btn {
-        background: var(--glass);
-        color: var(--text-light);
-        border: 1px solid var(--glass-border);
-    }
-    
-    .cancel-btn:hover {
-        background: var(--glass-highlight);
-    }
-    
-    .upload-btn {
-        background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-        color: var(--light);
-        box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
-    }
-    
-    .upload-btn:hover {
-        background: linear-gradient(135deg, var(--accent-light), var(--accent));
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4);
-    }
-    
-    /* ====== Responsive Design ====== */
-    /* Desktop Layout */
-    @media (min-width: 992px) { 
-        .container { 
-            flex-direction: row; 
-            height: 95vh;
-            max-height: 850px;
-            padding: 20px;
-            gap: 20px;
-        } 
-        .video-container { 
-            flex: 2; 
-            height: auto;
-        } 
-        .chat-container { 
-            flex: 1; 
-            height: auto;
-        }
-        
-        /* Larger controls on desktop */
-        .video-header {
-            padding: 15px 25px;
-        }
-        .video-title {
-            font-size: 1.3rem;
-        }
-        .video-controls {
-            padding: 15px 25px;
+
+        /* ====== Main Container ====== */
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             gap: 15px;
+            padding: 15px;
+            z-index: 1;
         }
-        .play-btn, .fullscreen-btn, .pip-btn, .settings-btn {
-            width: 44px;
-            height: 44px;
+
+        /* ====== Video Container ====== */
+        .video-container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            height: 45%;
+            transition: all 0.3s ease;
+            position: relative;
         }
-        .volume-slider {
-            width: 100px;
+
+        .video-container:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
         }
+
+        .video-header {
+            padding: 12px 20px;
+            background: var(--glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-title i {
+            color: var(--accent);
+        }
+
+        .video-status {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            background: var(--glass);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: block;
+            object-fit: contain;
+        }
+
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+            z-index: 10;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* ====== Video Controls ====== */
+        .video-controls {
+            padding: 12px 20px;
+            background: var(--glass);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .play-btn,
+        .fullscreen-btn,
+        .pip-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .play-btn:hover,
+        .fullscreen-btn:hover,
+        .pip-btn:hover {
+            background: var(--glass-highlight);
+            transform: scale(1.05);
+            color: var(--accent);
+        }
+
+        .progress-container {
+            flex-grow: 1;
+            height: 6px;
+            background: var(--glass);
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+            min-width: 50px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 100%;
+            background: var(--light);
+            border-radius: 50%;
+            transform: translateX(50%);
+            opacity: 0.8;
+        }
+
         .time-display {
-            min-width: 120px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            min-width: 100px;
+            text-align: center;
+            flex-shrink: 0;
+            background: var(--glass);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .volume-icon {
+            color: var(--text-light);
             font-size: 0.9rem;
         }
-        .chat-header {
-            padding: 15px 25px;
-            font-size: 1.3rem;
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: var(--glass);
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
         }
-        .chat-input-container {
-            padding: 15px 25px;
+
+        .volume-level {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 2px;
+            width: 80%;
+        }
+
+        .settings-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .settings-btn:hover {
+            background: var(--glass-highlight);
+            transform: scale(1.05);
+            color: var(--accent);
+        }
+
+        /* ====== Chat Container ====== */
+        .chat-container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            height: 55%;
+            transition: all 0.3s ease;
+        }
+
+        .chat-container:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .chat-header {
+            padding: 12px 20px;
+            background: var(--glass);
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .online-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: normal;
+            background: var(--glass);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 210, 106, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(0, 210, 106, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 210, 106, 0);
+            }
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             gap: 12px;
         }
-        .send-btn {
-            width: 46px;
-            height: 46px;
+
+        /* Custom scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
         }
-    }
-    
-    /* Tablet adjustments */
-    @media (max-width: 768px) and (min-width: 577px) {
-        .container {
-            height: 95vh;
-            max-height: none;
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--glass);
+            border-radius: 3px;
         }
-        .video-header, .video-controls {
-            padding: 15px 20px;
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
         }
-        .volume-slider {
-            width: 70px;
-        }
-    }
-    
-    /* Mobile adjustments */
-    @media (max-width: 576px) {
-        .container {
-            padding: 10px;
-            gap: 10px;
-            height: 100%;
-        }
-        .video-header, .video-controls {
-            padding: 10px 15px;
-        }
-        .video-title {
-            font-size: 1rem;
-        }
-        .video-status {
-            font-size: 0.75rem;
-        }
-        .time-display {
-            min-width: 90px;
-            font-size: 0.75rem;
-        }
-        .volume-slider {
-            width: 60px;
-        }
-        .chat-container {
-            min-height: 350px;
-        }
-        .chat-header {
-            padding: 12px 15px;
-            font-size: 1rem;
-        }
-        .chat-messages {
-            padding: 12px;
-        }
-        .chat-input-container {
-            padding: 12px 15px;
-        }
+
         .message {
-            max-width: 90%;
+            max-width: 85%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+            font-size: 0.9rem;
+            transition: transform 0.2s, background-color 0.2s;
+            animation: messageAppear 0.3s ease-out;
         }
-        
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.received {
+            background: var(--glass);
+            color: var(--text-light);
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .message.sent {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--light);
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .message-time {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .reply-indicator {
+            position: relative;
+            padding-left: 12px;
+            border-left: 2px solid var(--accent);
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+            opacity: 0.9;
+            border-radius: 4px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .reply-text {
+            font-style: italic;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .message-reactions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .reaction {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reaction:hover {
+            background: var(--glass-highlight);
+            transform: scale(1.05);
+        }
+
+        .reaction.active {
+            background: var(--accent);
+            color: var(--light);
+        }
+
+        .reaction-count {
+            font-size: 0.65rem;
+        }
+
+        .file-attachment {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass);
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 8px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .file-icon {
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .file-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .file-name {
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        .download-btn {
+            background: var(--accent);
+            color: var(--light);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: var(--accent-light);
+            transform: scale(1.1);
+        }
+
+        /* ====== Chat Input ====== */
+        .chat-input-container {
+            padding: 12px 20px;
+            background: var(--glass);
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+            position: relative;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .action-btn:hover {
+            background: var(--glass-highlight);
+            transform: scale(1.05);
+            color: var(--accent);
+        }
+
+        .reply-preview {
+            background: var(--glass);
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            border-left: 3px solid var(--accent);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reply-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .remove-reply {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0 5px;
+            transition: all 0.2s;
+        }
+
+        .remove-reply:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            background: var(--glass);
+            color: var(--text-light);
+            outline: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 46, 99, 0.2);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border: none;
+            color: var(--light);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
+        }
+
+        .send-btn:hover {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4);
+        }
+
+        /* ====== Emoji Picker ====== */
+        .emoji-picker {
+            position: absolute;
+            bottom: 70px;
+            right: 20px;
+            z-index: 100;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        /* ====== Login Modal ====== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(10, 10, 20, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .login-modal {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            animation: modalAppear 0.5s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .login-title {
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-light);
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 46, 99, 0.2);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--light);
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4);
+        }
+
+        /* ====== File Upload Modal ====== */
+        .file-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(10, 10, 20, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        .file-modal-content {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: var(--shadow);
+            animation: modalAppear 0.5s ease-out;
+        }
+
+        .file-modal-title {
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .file-drop-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .file-drop-area:hover,
+        .file-drop-area.active {
+            border-color: var(--accent);
+            background: rgba(255, 46, 99, 0.05);
+        }
+
+        .file-drop-icon {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .file-drop-text {
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+
+        .file-drop-hint {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .cancel-btn,
+        .upload-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .cancel-btn {
+            background: var(--glass);
+            color: var(--text-light);
+            border: 1px solid var(--glass-border);
+        }
+
+        .cancel-btn:hover {
+            background: var(--glass-highlight);
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--light);
+            box-shadow: 0 4px 12px rgba(255, 46, 99, 0.3);
+        }
+
+        .upload-btn:hover {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 46, 99, 0.4);
+        }
+
+        /* ====== Responsive Design ====== */
+        /* Desktop Layout */
+        @media (min-width: 992px) {
+            .container {
+                flex-direction: row;
+                height: 95vh;
+                max-height: 850px;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .video-container {
+                flex: 2;
+                height: auto;
+            }
+
+            .chat-container {
+                flex: 1;
+                height: auto;
+            }
+
+            /* Larger controls on desktop */
+            .video-header {
+                padding: 15px 25px;
+            }
+
+            .video-title {
+                font-size: 1.3rem;
+            }
+
+            .video-controls {
+                padding: 15px 25px;
+                gap: 15px;
+            }
+
+            .play-btn,
+            .fullscreen-btn,
+            .pip-btn,
+            .settings-btn {
+                width: 44px;
+                height: 44px;
+            }
+
+            .volume-slider {
+                width: 100px;
+            }
+
+            .time-display {
+                min-width: 120px;
+                font-size: 0.9rem;
+            }
+
+            .chat-header {
+                padding: 15px 25px;
+                font-size: 1.3rem;
+            }
+
+            .chat-input-container {
+                padding: 15px 25px;
+                gap: 12px;
+            }
+
+            .send-btn {
+                width: 46px;
+                height: 46px;
+            }
+        }
+
+        /* Tablet adjustments */
+        @media (max-width: 768px) and (min-width: 577px) {
+            .container {
+                height: 95vh;
+                max-height: none;
+            }
+
+            .video-header,
+            .video-controls {
+                padding: 15px 20px;
+            }
+
+            .volume-slider {
+                width: 70px;
+            }
+        }
+
+
+        /* Mobile adjustments */
+        @media (max-width: 576px) {
+            .container {
+                flex-direction: column;
+                height: 100vh;
+                padding: 10px;
+            }
+
+            .video-container {
+                height: 50vh;
+                min-height: 250px;
+            }
+
+            .chat-container {
+                height: 50vh;
+                min-height: 300px;
+            }
+
+            .chat-input-container {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            .chat-input {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+
+            .send-btn {
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+            }
+
+            .input-actions {
+                gap: 4px;
+            }
+
+            .action-btn {
+                width: 32px;
+                height: 32px;
+            }
+
+            .emoji-picker {
+                bottom: 60px;
+                right: 10px;
+            }
+        }
+
+
         /* Hide some controls on very small screens */
         @media (max-width: 380px) {
-            .pip-btn, .settings-btn {
+
+            .pip-btn,
+            .settings-btn {
                 display: none;
             }
+
             .volume-control {
                 display: none;
             }
         }
-    }
-    
-    /* Very short screens */
-    @media (max-height: 600px) {
-        .chat-container {
-            min-height: 250px;
+
+
+        /* Very short screens */
+        @media (max-height: 600px) {
+            .chat-container {
+                min-height: 250px;
+            }
+
+            .chat-messages {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .message {
+                padding: 8px 12px;
+            }
         }
-        .chat-messages {
-            padding: 10px;
-            gap: 8px;
+
+        /* Fullscreen styles */
+        .video-container:fullscreen {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
         }
-        .message {
-            padding: 8px 12px;
+
+        .video-container:fullscreen .video-wrapper {
+            flex: 1;
         }
-    }
-    
-    /* Fullscreen styles */
-    .video-container:fullscreen {
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
-    }
-    
-    .video-container:fullscreen .video-wrapper {
-        flex: 1;
-    }
-    
-    /* Prevent iOS zoom on input focus */
-    input, textarea {
-        font-size: 16px;
-    }
-</style>
+
+        /* Prevent iOS zoom on input focus */
+        input,
+        textarea {
+            font-size: 16px;
+        }
+    </style>
 </head>
+
 <body>
-<!-- Animated Background -->
-<div class="bg-animation" id="bgAnimation"></div>
+    <!-- Animated Background -->
+    <div class="bg-animation" id="bgAnimation"></div>
 
-<!-- Login Modal -->
-<div class="modal-overlay" id="loginModal">
-    <div class="login-modal">
-        <h2 class="login-title">Join NovaStream</h2>
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="username">Your Name</label>
-                <input type="text" class="form-input" id="username" placeholder="Enter your name" required autofocus>
-            </div>
-            <button type="submit" class="login-btn">Join Chat</button>
-        </form>
-    </div>
-</div>
-
-<!-- File Upload Modal -->
-<div class="file-modal" id="fileModal">
-    <div class="file-modal-content">
-        <h2 class="file-modal-title">Share File</h2>
-        <div class="file-drop-area" id="fileDropArea">
-            <div class="file-drop-icon">
-                <i class="fas fa-cloud-upload-alt"></i>
-            </div>
-            <div class="file-drop-text">Drag & drop your file here</div>
-            <div class="file-drop-hint">or click to browse</div>
-            <input type="file" class="file-input" id="fileInput">
-        </div>
-        <div class="file-actions">
-            <button class="cancel-btn" id="cancelUpload">Cancel</button>
-            <button class="upload-btn" id="uploadBtn" disabled>Upload</button>
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="login-modal">
+            <h2 class="login-title">Join NovaStream</h2>
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">Your Name</label>
+                    <input type="text" class="form-input" id="username" placeholder="Enter your name" required
+                        autofocus>
+                </div>
+                <button type="submit" class="login-btn">Join Chat</button>
+            </form>
         </div>
     </div>
-</div>
 
-<!-- Main Content -->
-<div class="container" id="mainContainer" style="display:none;">
-    <div class="video-container">
-        <div class="video-header">
-            <div class="video-title">
-                <i class="fas fa-play-circle"></i>
-                <span>NovaStream Video Player</span>
+    <!-- File Upload Modal -->
+    <div class="file-modal" id="fileModal">
+        <div class="file-modal-content">
+            <h2 class="file-modal-title">Share File</h2>
+            <div class="file-drop-area" id="fileDropArea">
+                <div class="file-drop-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="file-drop-text">Drag & drop your file here</div>
+                <div class="file-drop-hint">or click to browse</div>
+                <input type="file" class="file-input" id="fileInput">
             </div>
-            <div class="video-status">Ready to play</div>
-        </div>
-        <div class="video-wrapper">
-            <video id="videoPlayer">
-                <source src="http://20.84.113.189:8000/video" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <div class="loading-spinner" id="loadingSpinner"></div>
-        </div>
-        <div class="video-controls">
-            <button class="play-btn" id="playBtn"><i class="fas fa-play"></i></button>
-            <button class="pip-btn" id="pipBtn"><i class="fas fa-compress-alt"></i></button>
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar" id="progressBar"></div>
+            <div class="file-actions">
+                <button class="cancel-btn" id="cancelUpload">Cancel</button>
+                <button class="upload-btn" id="uploadBtn" disabled>Upload</button>
             </div>
-            <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-            <div class="volume-control">
-                <div class="volume-icon"><i class="fas fa-volume-up"></i></div>
-                <div class="volume-slider" id="volumeSlider">
-                    <div class="volume-level" id="volumeLevel"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" id="mainContainer" style="display:none;">
+        <div class="video-container">
+            <div class="video-header">
+                <div class="video-title">
+                    <i class="fas fa-play-circle"></i>
+                    <span>NovaStream Video Player</span>
+                </div>
+                <div class="video-status">Ready to play</div>
+            </div>
+            <div class="video-wrapper">
+                <video id="videoPlayer">
+                    <source src="http://20.84.113.189:8000/video" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="loading-spinner" id="loadingSpinner"></div>
+            </div>
+            <div class="video-controls">
+                <button class="play-btn" id="playBtn"><i class="fas fa-play"></i></button>
+                <button class="pip-btn" id="pipBtn"><i class="fas fa-compress-alt"></i></button>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                <div class="volume-control">
+                    <div class="volume-icon"><i class="fas fa-volume-up"></i></div>
+                    <div class="volume-slider" id="volumeSlider">
+                        <div class="volume-level" id="volumeLevel"></div>
+                    </div>
+                </div>
+                <button class="settings-btn" id="settingsBtn"><i class="fas fa-cog"></i></button>
+                <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
+            </div>
+        </div>
+        <div class="chat-container">
+            <div class="chat-header">
+                <span>Chat Room - <span id="userNameDisplay">User</span></span>
+                <div class="online-indicator">
+                    <div class="online-dot"></div>
+                    <span id="onlineCount">1 Online</span>
                 </div>
             </div>
-            <button class="settings-btn" id="settingsBtn"><i class="fas fa-cog"></i></button>
-            <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
-        </div>
-    </div>
-    <div class="chat-container">
-        <div class="chat-header">
-            <span>Chat Room - <span id="userNameDisplay">User</span></span>
-            <div class="online-indicator">
-                <div class="online-dot"></div>
-                <span id="onlineCount">1 Online</span>
-            </div>
-        </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-container">
-            <div id="replyPreview" class="reply-preview" style="display: none;">
-                <div class="reply-preview-header">
-                    <span>Replying to:</span>
-                    <button class="remove-reply" id="removeReply"><i class="fas fa-times"></i></button>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <div id="replyPreview" class="reply-preview" style="display: none;">
+                    <div class="reply-preview-header">
+                        <span>Replying to:</span>
+                        <button class="remove-reply" id="removeReply"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div id="replyPreviewContent"></div>
                 </div>
-                <div id="replyPreviewContent"></div>
+                <div class="input-actions">
+                    <button class="action-btn" id="emojiBtn"><i class="fas fa-smile"></i></button>
+                    <button class="action-btn" id="fileBtn"><i class="fas fa-paperclip"></i></button>
+                </div>
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+                <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
             </div>
-            <div class="input-actions">
-                <button class="action-btn" id="emojiBtn"><i class="fas fa-smile"></i></button>
-                <button class="action-btn" id="fileBtn"><i class="fas fa-paperclip"></i></button>
-            </div>
-            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
-            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+            <div class="emoji-picker" id="emojiPicker"></div>
         </div>
-        <div class="emoji-picker" id="emojiPicker"></div>
     </div>
-</div>
 
-<!-- Socket.IO -->
-<script src="/socket.io/socket.io.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Create animated background dots
-    const bgAnimation = document.getElementById('bgAnimation');
-    for (let i = 0; i < 50; i++) {
-        const dot = document.createElement('div');
-        dot.classList.add('bg-dot');
-        dot.style.left = `${Math.random() * 100}%`;
-        dot.style.top = `${Math.random() * 100}%`;
-        dot.style.animationDelay = `${Math.random() * 15}s`;
-        dot.style.width = `${2 + Math.random() * 4}px`;
-        dot.style.height = dot.style.width;
-        bgAnimation.appendChild(dot);
-    }
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Create animated background dots
+            const bgAnimation = document.getElementById('bgAnimation');
+            for (let i = 0; i < 50; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('bg-dot');
+                dot.style.left = `${Math.random() * 100}%`;
+                dot.style.top = `${Math.random() * 100}%`;
+                dot.style.animationDelay = `${Math.random() * 15}s`;
+                dot.style.width = `${2 + Math.random() * 4}px`;
+                dot.style.height = dot.style.width;
+                bgAnimation.appendChild(dot);
+            }
 
-    const loginModal = document.getElementById('loginModal');
-    const mainContainer = document.getElementById('mainContainer');
-    const loginForm = document.getElementById('loginForm');
-    const usernameInput = document.getElementById('username');
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    const onlineCount = document.getElementById('onlineCount');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const replyPreview = document.getElementById('replyPreview');
-    const replyPreviewContent = document.getElementById('replyPreviewContent');
-    const removeReply = document.getElementById('removeReply');
-    const emojiBtn = document.getElementById('emojiBtn');
-    const emojiPicker = document.getElementById('emojiPicker');
-    const fileBtn = document.getElementById('fileBtn');
-    const fileModal = document.getElementById('fileModal');
-    const fileDropArea = document.getElementById('fileDropArea');
-    const fileInput = document.getElementById('fileInput');
-    const cancelUpload = document.getElementById('cancelUpload');
-    const uploadBtn = document.getElementById('uploadBtn');
-    
-    // Video elements
-    const video = document.getElementById('videoPlayer');
-    const playBtn = document.getElementById('playBtn');
-    const pipBtn = document.getElementById('pipBtn');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const volumeLevel = document.getElementById('volumeLevel');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const videoStatus = document.querySelector('.video-status');
-    
-    let currentUser = '';
-    let replyToMessage = null;
-    let selectedFile = null;
-    
-    // Connect to server
-    const socket = io();
-    
-    // Login
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const username = usernameInput.value.trim();
-        if(!username) return;
-        currentUser = username;
-        userNameDisplay.textContent = username;
-        loginModal.style.display = 'none'; // FIX: Hide modal properly
-        mainContainer.style.display = 'flex';
-        socket.emit('join', username);
-        chatInput.focus();
-    });
+            const loginModal = document.getElementById('loginModal');
+            const mainContainer = document.getElementById('mainContainer');
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+            const onlineCount = document.getElementById('onlineCount');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const replyPreview = document.getElementById('replyPreview');
+            const replyPreviewContent = document.getElementById('replyPreviewContent');
+            const removeReply = document.getElementById('removeReply');
+            const emojiBtn = document.getElementById('emojiBtn');
+            const emojiPicker = document.getElementById('emojiPicker');
+            const fileBtn = document.getElementById('fileBtn');
+            const fileModal = document.getElementById('fileModal');
+            const fileDropArea = document.getElementById('fileDropArea');
+            const fileInput = document.getElementById('fileInput');
+            const cancelUpload = document.getElementById('cancelUpload');
+            const uploadBtn = document.getElementById('uploadBtn');
 
-    // FIX: Add this function to handle emoji picker
-    function initEmojiPicker() {
-        // Simple emoji picker implementation
-        const emojis = ['😀', '😂', '🥰', '😎', '🤔', '👋', '🎉', '❤️', '🔥', '👍', '👏', '🙏'];
-        emojiPicker.innerHTML = '';
-        
-        emojis.forEach(emoji => {
-            const emojiBtn = document.createElement('button');
-            emojiBtn.textContent = emoji;
-            emojiBtn.style.background = 'var(--glass)';
-            emojiBtn.style.border = '1px solid var(--glass-border)';
-            emojiBtn.style.borderRadius = '8px';
-            emojiBtn.style.padding = '8px';
-            emojiBtn.style.margin = '2px';
-            emojiBtn.style.cursor = 'pointer';
-            emojiBtn.style.fontSize = '1.2rem';
-            emojiBtn.style.transition = 'all 0.2s';
-            
-            emojiBtn.addEventListener('mouseenter', function() {
-                this.style.background = 'var(--glass-highlight)';
-                this.style.transform = 'scale(1.1)';
-            });
-            
-            emojiBtn.addEventListener('mouseleave', function() {
-                this.style.background = 'var(--glass)';
-                this.style.transform = 'scale(1)';
-            });
-            
-            emojiBtn.addEventListener('click', function() {
-                chatInput.value += emoji;
+            // Video elements
+            const video = document.getElementById('videoPlayer');
+            const playBtn = document.getElementById('playBtn');
+            const pipBtn = document.getElementById('pipBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeLevel = document.getElementById('volumeLevel');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const videoStatus = document.querySelector('.video-status');
+
+            let currentUser = '';
+            let replyToMessage = null;
+            let selectedFile = null;
+
+            // Connect to server
+            const socket = io();
+
+            // Login
+            loginForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const username = usernameInput.value.trim();
+                if (!username) return;
+                currentUser = username;
+                userNameDisplay.textContent = username;
+                loginModal.style.display = 'none'; // FIX: Hide modal properly
+                mainContainer.style.display = 'flex';
+                socket.emit('join', username);
                 chatInput.focus();
-                emojiPicker.style.display = 'none';
             });
-            
-            emojiPicker.appendChild(emojiBtn);
-        });
-    }
-    
-    // Toggle emoji picker
-    emojiBtn.addEventListener('click', function() {
-        if (emojiPicker.style.display === 'block') {
-            emojiPicker.style.display = 'none';
-        } else {
-            emojiPicker.style.display = 'block';
-            initEmojiPicker(); // Initialize when first opened
-        }
-    });
-    
-    // Close emoji picker when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
-            emojiPicker.style.display = 'none';
-        }
-    });
-    
-    // File sharing
-    fileBtn.addEventListener('click', function() {
-        fileModal.style.display = 'flex';
-    });
-    
-    cancelUpload.addEventListener('click', function() {
-        fileModal.style.display = 'none';
-        selectedFile = null;
-        uploadBtn.disabled = true;
-    });
-    
-    fileDropArea.addEventListener('click', function() {
-        fileInput.click();
-    });
-    
-    fileInput.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            selectedFile = e.target.files[0];
-            uploadBtn.disabled = false;
-            fileDropArea.innerHTML = `
+
+            // FIX: Add this function to handle emoji picker
+            function initEmojiPicker() {
+                // Simple emoji picker implementation
+                const emojis = ['😀', '😂', '🥰', '😎', '🤔', '👋', '🎉', '❤️', '🔥', '👍', '👏', '🙏'];
+                emojiPicker.innerHTML = '';
+
+                emojis.forEach(emoji => {
+                    const emojiBtn = document.createElement('button');
+                    emojiBtn.textContent = emoji;
+                    emojiBtn.style.background = 'var(--glass)';
+                    emojiBtn.style.border = '1px solid var(--glass-border)';
+                    emojiBtn.style.borderRadius = '8px';
+                    emojiBtn.style.padding = '8px';
+                    emojiBtn.style.margin = '2px';
+                    emojiBtn.style.cursor = 'pointer';
+                    emojiBtn.style.fontSize = '1.2rem';
+                    emojiBtn.style.transition = 'all 0.2s';
+
+                    emojiBtn.addEventListener('mouseenter', function () {
+                        this.style.background = 'var(--glass-highlight)';
+                        this.style.transform = 'scale(1.1)';
+                    });
+
+                    emojiBtn.addEventListener('mouseleave', function () {
+                        this.style.background = 'var(--glass)';
+                        this.style.transform = 'scale(1)';
+                    });
+
+                    emojiBtn.addEventListener('click', function () {
+                        chatInput.value += emoji;
+                        chatInput.focus();
+                        emojiPicker.style.display = 'none';
+                    });
+
+                    emojiPicker.appendChild(emojiBtn);
+                });
+            }
+
+            // Toggle emoji picker
+            emojiBtn.addEventListener('click', function () {
+                if (emojiPicker.style.display === 'block') {
+                    emojiPicker.style.display = 'none';
+                } else {
+                    emojiPicker.style.display = 'block';
+                    initEmojiPicker(); // Initialize when first opened
+                }
+            });
+
+            // Close emoji picker when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+                    emojiPicker.style.display = 'none';
+                }
+            });
+
+            // File sharing
+            fileBtn.addEventListener('click', function () {
+                fileModal.style.display = 'flex';
+            });
+
+            cancelUpload.addEventListener('click', function () {
+                fileModal.style.display = 'none';
+                selectedFile = null;
+                uploadBtn.disabled = true;
+            });
+
+            fileDropArea.addEventListener('click', function () {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function (e) {
+                if (e.target.files.length > 0) {
+                    selectedFile = e.target.files[0];
+                    uploadBtn.disabled = false;
+                    fileDropArea.innerHTML = `
                 <div class="file-drop-icon">
                     <i class="fas fa-file"></i>
                 </div>
                 <div class="file-drop-text">${selectedFile.name}</div>
                 <div class="file-drop-hint">${formatFileSize(selectedFile.size)}</div>
             `;
-            fileDropArea.classList.add('active');
-        }
-    });
-    
-    uploadBtn.addEventListener('click', function() {
-        if (selectedFile) {
-            // In a real app, you would upload the file to a server
-            // For this demo, we'll simulate file sharing
-            socket.emit('fileMessage', {
-                fileName: selectedFile.name,
-                fileSize: selectedFile.size,
-                fileType: selectedFile.type
+                    fileDropArea.classList.add('active');
+                }
             });
-            
-            fileModal.style.display = 'none';
-            selectedFile = null;
-            uploadBtn.disabled = true;
-            
-            // Reset file drop area
-            fileDropArea.innerHTML = `
+
+            uploadBtn.addEventListener('click', function () {
+                if (selectedFile) {
+                    // In a real app, you would upload the file to a server
+                    // For this demo, we'll simulate file sharing
+                    socket.emit('fileMessage', {
+                        fileName: selectedFile.name,
+                        fileSize: selectedFile.size,
+                        fileType: selectedFile.type
+                    });
+
+                    fileModal.style.display = 'none';
+                    selectedFile = null;
+                    uploadBtn.disabled = true;
+
+                    // Reset file drop area
+                    fileDropArea.innerHTML = `
                 <div class="file-drop-icon">
                     <i class="fas fa-cloud-upload-alt"></i>
                 </div>
                 <div class="file-drop-text">Drag & drop your file here</div>
                 <div class="file-drop-hint">or click to browse</div>
             `;
-            fileDropArea.classList.remove('active');
-        }
-    });
-    
-    // Drag and drop for files
-    fileDropArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        fileDropArea.classList.add('active');
-    });
-    
-    fileDropArea.addEventListener('dragleave', function() {
-        fileDropArea.classList.remove('active');
-    });
-    
-    fileDropArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        if (e.dataTransfer.files.length > 0) {
-            selectedFile = e.dataTransfer.files[0];
-            uploadBtn.disabled = false;
-            fileDropArea.innerHTML = `
+                    fileDropArea.classList.remove('active');
+                }
+            });
+
+            // Drag and drop for files
+            fileDropArea.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                fileDropArea.classList.add('active');
+            });
+
+            fileDropArea.addEventListener('dragleave', function () {
+                fileDropArea.classList.remove('active');
+            });
+
+            fileDropArea.addEventListener('drop', function (e) {
+                e.preventDefault();
+                if (e.dataTransfer.files.length > 0) {
+                    selectedFile = e.dataTransfer.files[0];
+                    uploadBtn.disabled = false;
+                    fileDropArea.innerHTML = `
                 <div class="file-drop-icon">
                     <i class="fas fa-file"></i>
                 </div>
                 <div class="file-drop-text">${selectedFile.name}</div>
                 <div class="file-drop-hint">${formatFileSize(selectedFile.size)}</div>
             `;
-        }
-    });
-    
-    // Format file size
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-    
-    // Send message
-    function sendMessage() {
-        const messageText = chatInput.value.trim();
-        if(!messageText && !selectedFile) return;
-        
-        if(replyToMessage) {
-            // Send reply message
-            socket.emit('chatMessage', {
-                text: messageText,
-                replyTo: {
-                    sender: replyToMessage.sender,
-                    text: replyToMessage.text
                 }
             });
-            // Reset reply
-            replyToMessage = null;
-            replyPreview.style.display = 'none';
-            chatInput.placeholder = 'Type your message...';
-        } else {
-            // Send regular message
-            socket.emit('chatMessage', messageText);
-        }
-        
-        chatInput.value = '';
-    }
-    
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage(); });
-    
-    // Remove reply
-    removeReply.addEventListener('click', function() {
-        replyToMessage = null;
-        replyPreview.style.display = 'none';
-        chatInput.placeholder = 'Type your message...';
-    });
-    
-    // Receive message
-    socket.on('message', ({ sender, text, replyTo, reactions, id }) => {
-        addMessageToChat(sender, text, replyTo, reactions, id);
-    });
-    
-    // Receive file message
-    socket.on('fileMessage', ({ sender, fileName, fileSize, fileType, id }) => {
-        addFileMessageToChat(sender, fileName, fileSize, fileType, id);
-    });
-    
-    // Add message to chat
-    function addMessageToChat(sender, text, replyTo, reactions = [], id) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', sender===currentUser?'sent':'received');
-        messageDiv.dataset.id = id || Date.now();
-        
-        // Add double tap functionality for replies
-        let tapCount = 0;
-        let tapTimer;
-        
-        messageDiv.addEventListener('click', function(e) {
-            // Don't trigger if clicking on a reaction
-            if (e.target.closest('.reaction')) return;
-            
-            tapCount++;
-            if (tapCount === 1) {
-                tapTimer = setTimeout(() => {
-                    tapCount = 0;
-                }, 300);
-            } else if (tapCount === 2) {
-                clearTimeout(tapTimer);
-                tapCount = 0;
-                
-                // Only allow reply to received messages
-                if (sender !== currentUser) {
-                    replyToMessage = { sender, text };
-                    replyPreviewContent.innerHTML = `<span class="reply-sender">${sender}:</span> ${text}`;
-                    replyPreview.style.display = 'block';
-                    chatInput.placeholder = `Reply to ${sender}...`;
-                    chatInput.focus();
-                }
+
+            // Format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
-        });
-        
-        const now = new Date();
-        const timeString = now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
-        
-        let content = '';
-        if(replyTo) {
-            content = `
+
+            // Send message
+            function sendMessage() {
+                const messageText = chatInput.value.trim();
+                if (!messageText && !selectedFile) return;
+
+                if (replyToMessage) {
+                    // Send reply message
+                    socket.emit('chatMessage', {
+                        text: messageText,
+                        replyTo: {
+                            sender: replyToMessage.sender,
+                            text: replyToMessage.text
+                        }
+                    });
+                    // Reset reply
+                    replyToMessage = null;
+                    replyPreview.style.display = 'none';
+                    chatInput.placeholder = 'Type your message...';
+                } else {
+                    // Send regular message
+                    socket.emit('chatMessage', messageText);
+                }
+
+                chatInput.value = '';
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+            // Remove reply
+            removeReply.addEventListener('click', function () {
+                replyToMessage = null;
+                replyPreview.style.display = 'none';
+                chatInput.placeholder = 'Type your message...';
+            });
+
+            // Receive message
+            socket.on('message', ({ sender, text, replyTo, reactions, id }) => {
+                addMessageToChat(sender, text, replyTo, reactions, id);
+            });
+
+            // Receive file message
+            socket.on('fileMessage', ({ sender, fileName, fileSize, fileType, id }) => {
+                addFileMessageToChat(sender, fileName, fileSize, fileType, id);
+            });
+
+            // Add message to chat
+            function addMessageToChat(sender, text, replyTo, reactions = [], id) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', sender === currentUser ? 'sent' : 'received');
+                messageDiv.dataset.id = id || Date.now();
+
+                // Add double tap functionality for replies
+                let tapCount = 0;
+                let tapTimer;
+
+                messageDiv.addEventListener('click', function (e) {
+                    // Don't trigger if clicking on a reaction
+                    if (e.target.closest('.reaction')) return;
+
+                    tapCount++;
+                    if (tapCount === 1) {
+                        tapTimer = setTimeout(() => {
+                            tapCount = 0;
+                        }, 300);
+                    } else if (tapCount === 2) {
+                        clearTimeout(tapTimer);
+                        tapCount = 0;
+
+                        // Only allow reply to received messages
+                        if (sender !== currentUser) {
+                            replyToMessage = { sender, text };
+                            replyPreviewContent.innerHTML = `<span class="reply-sender">${sender}:</span> ${text}`;
+                            replyPreview.style.display = 'block';
+                            chatInput.placeholder = `Reply to ${sender}...`;
+                            chatInput.focus();
+                        }
+                    }
+                });
+
+                const now = new Date();
+                const timeString = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+
+                let content = '';
+                if (replyTo) {
+                    content = `
                 <div class="reply-indicator">
                     <div class="reply-sender">Reply to ${replyTo.sender}</div>
                     <div class="reply-text">${replyTo.text}</div>
@@ -1454,28 +1520,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="message-text">${text}</div>
                 <div class="message-time">${timeString}</div>
             `;
-        } else {
-            content = `
+                } else {
+                    content = `
                 <div class="message-sender">${sender}</div>
                 <div class="message-text">${text}</div>
                 <div class="message-time">${timeString}</div>
             `;
-        }
-        
-        // Add reactions if any
-        if (reactions.length > 0) {
-            const reactionsHtml = reactions.map(reaction => `
+                }
+
+                // Add reactions if any
+                if (reactions.length > 0) {
+                    const reactionsHtml = reactions.map(reaction => `
                 <div class="reaction ${reaction.users.includes(currentUser) ? 'active' : ''}" 
                      data-emoji="${reaction.emoji}" data-id="${messageDiv.dataset.id}">
                     <span class="reaction-emoji">${reaction.emoji}</span>
                     <span class="reaction-count">${reaction.count}</span>
                 </div>
             `).join('');
-            
-            content += `<div class="message-reactions">${reactionsHtml}</div>`;
-        } else if (sender !== currentUser) {
-            // Add default reactions for received messages
-            content += `
+
+                    content += `<div class="message-reactions">${reactionsHtml}</div>`;
+                } else if (sender !== currentUser) {
+                    // Add default reactions for received messages
+                    content += `
                 <div class="message-reactions">
                     <div class="reaction" data-emoji="👍" data-id="${messageDiv.dataset.id}">
                         <span class="reaction-emoji">👍</span>
@@ -1491,40 +1557,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
-        }
-        
-        messageDiv.innerHTML = content;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Add reaction event listeners
-        messageDiv.querySelectorAll('.reaction').forEach(reactionEl => {
-            reactionEl.addEventListener('click', function() {
-                const messageId = this.dataset.id;
-                const emoji = this.dataset.emoji;
-                socket.emit('addReaction', { messageId, emoji });
-            });
-        });
-    }
-    
-    // Add file message to chat
-    function addFileMessageToChat(sender, fileName, fileSize, fileType, id) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', sender===currentUser?'sent':'received');
-        messageDiv.dataset.id = id || Date.now();
-        
-        const now = new Date();
-        const timeString = now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
-        
-        // Determine file icon based on file type
-        let fileIcon = 'fa-file';
-        if (fileType.startsWith('image/')) fileIcon = 'fa-file-image';
-        else if (fileType.startsWith('video/')) fileIcon = 'fa-file-video';
-        else if (fileType.startsWith('audio/')) fileIcon = 'fa-file-audio';
-        else if (fileType.includes('pdf')) fileIcon = 'fa-file-pdf';
-        else if (fileType.includes('zip') || fileType.includes('rar')) fileIcon = 'fa-file-archive';
-        
-        const content = `
+                }
+
+                messageDiv.innerHTML = content;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Add reaction event listeners
+                messageDiv.querySelectorAll('.reaction').forEach(reactionEl => {
+                    reactionEl.addEventListener('click', function () {
+                        const messageId = this.dataset.id;
+                        const emoji = this.dataset.emoji;
+                        socket.emit('addReaction', { messageId, emoji });
+                    });
+                });
+            }
+
+            // Add file message to chat
+            function addFileMessageToChat(sender, fileName, fileSize, fileType, id) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', sender === currentUser ? 'sent' : 'received');
+                messageDiv.dataset.id = id || Date.now();
+
+                const now = new Date();
+                const timeString = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+
+                // Determine file icon based on file type
+                let fileIcon = 'fa-file';
+                if (fileType.startsWith('image/')) fileIcon = 'fa-file-image';
+                else if (fileType.startsWith('video/')) fileIcon = 'fa-file-video';
+                else if (fileType.startsWith('audio/')) fileIcon = 'fa-file-audio';
+                else if (fileType.includes('pdf')) fileIcon = 'fa-file-pdf';
+                else if (fileType.includes('zip') || fileType.includes('rar')) fileIcon = 'fa-file-archive';
+
+                const content = `
             <div class="message-sender">${sender}</div>
             <div class="file-attachment">
                 <div class="file-icon">
@@ -1540,194 +1606,205 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="message-time">${timeString}</div>
         `;
-        
-        messageDiv.innerHTML = content;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Add download functionality
-        messageDiv.querySelector('.download-btn').addEventListener('click', function() {
-            alert(`In a real application, this would download: ${fileName}`);
-        });
-    }
-    
-    // Handle reaction updates
-    socket.on('reactionUpdate', ({ messageId, reactions }) => {
-        const messageEl = document.querySelector(`.message[data-id="${messageId}"]`);
-        if (messageEl) {
-            const reactionsContainer = messageEl.querySelector('.message-reactions');
-            if (reactionsContainer) {
-                const reactionsHtml = reactions.map(reaction => `
+
+                messageDiv.innerHTML = content;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Add download functionality
+                messageDiv.querySelector('.download-btn').addEventListener('click', function () {
+                    alert(`In a real application, this would download: ${fileName}`);
+                });
+            }
+
+            // Handle reaction updates
+            socket.on('reactionUpdate', ({ messageId, reactions }) => {
+                const messageEl = document.querySelector(`.message[data-id="${messageId}"]`);
+                if (messageEl) {
+                    const reactionsContainer = messageEl.querySelector('.message-reactions');
+                    if (reactionsContainer) {
+                        const reactionsHtml = reactions.map(reaction => `
                     <div class="reaction ${reaction.users.includes(currentUser) ? 'active' : ''}" 
                          data-emoji="${reaction.emoji}" data-id="${messageId}">
                         <span class="reaction-emoji">${reaction.emoji}</span>
                         <span class="reaction-count">${reaction.count}</span>
                     </div>
                 `).join('');
-                
-                reactionsContainer.innerHTML = reactionsHtml;
-                
-                // Re-add event listeners
-                reactionsContainer.querySelectorAll('.reaction').forEach(reactionEl => {
-                    reactionEl.addEventListener('click', function() {
-                        const messageId = this.dataset.id;
-                        const emoji = this.dataset.emoji;
-                        socket.emit('addReaction', { messageId, emoji });
-                    });
-                });
+
+                        reactionsContainer.innerHTML = reactionsHtml;
+
+                        // Re-add event listeners
+                        reactionsContainer.querySelectorAll('.reaction').forEach(reactionEl => {
+                            reactionEl.addEventListener('click', function () {
+                                const messageId = this.dataset.id;
+                                const emoji = this.dataset.emoji;
+                                socket.emit('addReaction', { messageId, emoji });
+                            });
+                        });
+                    }
+                }
+            });
+
+            socket.on('onlineCount', count => {
+                onlineCount.textContent = `${count} Online`;
+            });
+
+            // ===== Video Player =====
+            playBtn.addEventListener('click', togglePlay);
+            video.addEventListener('click', togglePlay);
+
+            function togglePlay() {
+                if (video.paused || video.ended) {
+                    video.play();
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+                else {
+                    video.pause();
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
             }
-        }
-    });
-    
-    socket.on('onlineCount', count => { 
-        onlineCount.textContent = `${count} Online`; 
-    });
-    
-    // ===== Video Player =====
-    playBtn.addEventListener('click', togglePlay);
-    video.addEventListener('click', togglePlay);
-    
-    function togglePlay() {
-        if(video.paused||video.ended){ 
-            video.play(); 
-            playBtn.innerHTML='<i class="fas fa-pause"></i>'; 
-        }
-        else{ 
-            video.pause(); 
-            playBtn.innerHTML='<i class="fas fa-play"></i>'; 
-        }
-    }
-    
-    // Picture-in-Picture
-    pipBtn.addEventListener('click', async () => {
-        try {
-            if (video !== document.pictureInPictureElement) {
-                await video.requestPictureInPicture();
-            } else {
-                await document.exitPictureInPicture();
+
+            // Picture-in-Picture
+            pipBtn.addEventListener('click', async () => {
+                try {
+                    if (video !== document.pictureInPictureElement) {
+                        await video.requestPictureInPicture();
+                    } else {
+                        await document.exitPictureInPicture();
+                    }
+                } catch (error) {
+                    console.error('Picture-in-Picture failed:', error);
+                }
+            });
+
+            video.addEventListener('enterpictureinpicture', () => {
+                pipBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
+            });
+
+            video.addEventListener('leavepictureinpicture', () => {
+                pipBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
+            });
+
+            video.addEventListener('timeupdate', updateProgress);
+            progressContainer.addEventListener('click', setProgress);
+
+            function updateProgress() {
+                if (video.duration) {
+                    const percent = (video.currentTime / video.duration) * 100;
+                    progressBar.style.width = `${percent}%`;
+                    const cm = Math.floor(video.currentTime / 60), cs = Math.floor(video.currentTime % 60);
+                    const dm = Math.floor(video.duration / 60), ds = Math.floor(video.duration % 60);
+                    timeDisplay.textContent = `${cm}:${cs < 10 ? '0' : ''}${cs} / ${dm}:${ds < 10 ? '0' : ''}${ds}`;
+                }
             }
-        } catch (error) {
-            console.error('Picture-in-Picture failed:', error);
-        }
-    });
-    
-    video.addEventListener('enterpictureinpicture', () => {
-        pipBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
-    });
-    
-    video.addEventListener('leavepictureinpicture', () => {
-        pipBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
-    });
-    
-    video.addEventListener('timeupdate', updateProgress);
-    progressContainer.addEventListener('click', setProgress);
-    
-    function updateProgress(){
-        if(video.duration){
-            const percent = (video.currentTime/video.duration)*100;
-            progressBar.style.width=`${percent}%`;
-            const cm = Math.floor(video.currentTime/60), cs=Math.floor(video.currentTime%60);
-            const dm = Math.floor(video.duration/60), ds=Math.floor(video.duration%60);
-            timeDisplay.textContent=`${cm}:${cs<10?'0':''}${cs} / ${dm}:${ds<10?'0':''}${ds}`;
-        }
-    }
-    
-    function setProgress(e){ 
-        video.currentTime = (e.offsetX/progressContainer.clientWidth)*video.duration; 
-    }
-    
-    volumeSlider.addEventListener('click', e => { 
-        video.volume = e.offsetX/volumeSlider.clientWidth; 
-        volumeLevel.style.width=`${video.volume*100}%`; 
-    });
-    
-    video.volume = 0.8; 
-    volumeLevel.style.width='80%';
-    
-    fullscreenBtn.addEventListener('click', ()=>{
-        const videoContainer = document.querySelector('.video-container');
-        if(!document.fullscreenElement) {
-            if(videoContainer.requestFullscreen) {
-                videoContainer.requestFullscreen();
-            } else if(videoContainer.webkitRequestFullscreen) {
-                videoContainer.webkitRequestFullscreen(); // Safari
-            } else if(videoContainer.msRequestFullscreen) {
-                videoContainer.msRequestFullscreen(); // IE/Edge
+
+            function setProgress(e) {
+                video.currentTime = (e.offsetX / progressContainer.clientWidth) * video.duration;
             }
-        } else {
-            if(document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if(document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if(document.msExitFullscreen) {
-                document.msExitFullscreen();
+
+            volumeSlider.addEventListener('click', e => {
+                video.volume = e.offsetX / volumeSlider.clientWidth;
+                volumeLevel.style.width = `${video.volume * 100}%`;
+            });
+
+            video.volume = 0.8;
+            volumeLevel.style.width = '80%';
+
+            fullscreenBtn.addEventListener('click', () => {
+                const videoContainer = document.querySelector('.video-container');
+                if (!document.fullscreenElement) {
+                    if (videoContainer.requestFullscreen) {
+                        videoContainer.requestFullscreen();
+                    } else if (videoContainer.webkitRequestFullscreen) {
+                        videoContainer.webkitRequestFullscreen(); // Safari
+                    } else if (videoContainer.msRequestFullscreen) {
+                        videoContainer.msRequestFullscreen(); // IE/Edge
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+            });
+
+            video.addEventListener('waiting', () => {
+                loadingSpinner.style.display = 'block';
+                videoStatus.textContent = 'Buffering...';
+            });
+
+            video.addEventListener('canplay', () => {
+                loadingSpinner.style.display = 'none';
+                videoStatus.textContent = 'Playing';
+            });
+
+            video.addEventListener('playing', () => {
+                loadingSpinner.style.display = 'none';
+                videoStatus.textContent = 'Playing';
+            });
+
+            video.addEventListener('loadstart', () => {
+                videoStatus.textContent = 'Loading...';
+            });
+
+            video.addEventListener('pause', () => {
+                videoStatus.textContent = 'Paused';
+            });
+
+            video.addEventListener('ended', () => {
+                videoStatus.textContent = 'Ended';
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            });
+
+            video.addEventListener('error', () => {
+                videoStatus.textContent = 'Error loading video';
+            });
+
+            // Settings button (placeholder for future functionality)
+            settingsBtn.addEventListener('click', () => {
+                alert('Video settings would open here in a full implementation');
+            });
+
+            // Fix for mobile keyboard covering input
+            chatInput.addEventListener('focus', () => {
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 500);
+            });
+
+            // Fix for send button overflow on mobile
+            function adjustSendButton() {
+                if (window.innerWidth <= 576) {
+                    const inputActions = document.querySelector('.input-actions');
+                    inputActions.style.flexShrink = '0';
+                }
             }
-        }
-    });
-    
-    video.addEventListener('waiting', ()=>{ 
-        loadingSpinner.style.display='block'; 
-        videoStatus.textContent='Buffering...'; 
-    });
-    
-    video.addEventListener('canplay', ()=>{ 
-        loadingSpinner.style.display='none'; 
-        videoStatus.textContent='Playing'; 
-    });
-    
-    video.addEventListener('playing', ()=>{ 
-        loadingSpinner.style.display='none'; 
-        videoStatus.textContent='Playing'; 
-    });
-    
-    video.addEventListener('loadstart', ()=>{ 
-        videoStatus.textContent='Loading...'; 
-    });
-    
-    video.addEventListener('pause', ()=>{ 
-        videoStatus.textContent='Paused'; 
-    });
-    
-    video.addEventListener('ended', ()=>{ 
-        videoStatus.textContent='Ended'; 
-        playBtn.innerHTML='<i class="fas fa-play"></i>'; 
-    });
-    
-    video.addEventListener('error', ()=>{ 
-        videoStatus.textContent='Error loading video'; 
-    });
-    
-    // Settings button (placeholder for future functionality)
-    settingsBtn.addEventListener('click', () => {
-        alert('Video settings would open here in a full implementation');
-    });
-    
-    // Handle keyboard on mobile devices
-    chatInput.addEventListener('focus', function() {
-        // On some mobile devices, we need to ensure the input stays visible
-        setTimeout(function() {
-            chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
-    });
-    
-    // Prevent page zoom on iOS when focusing on inputs
-    document.addEventListener('touchstart', function() {}, {passive: true});
-    
-    // Video seek functionality
-    video.addEventListener('click', function(e) {
-        const videoRect = video.getBoundingClientRect();
-        const clickX = e.clientX - videoRect.left;
-        const videoWidth = videoRect.width;
-        
-        if (clickX < videoWidth / 2) {
-            // Left side clicked - seek backward
-            video.currentTime = Math.max(0, video.currentTime - 10);
-        } else {
-            // Right side clicked - seek forward
-            video.currentTime = Math.min(video.duration, video.currentTime + 10);
-        }
-    });
-});
-</script>
+            window.addEventListener('resize', adjustSendButton);
+            adjustSendButton();
+
+
+            // Prevent page zoom on iOS when focusing on inputs
+            document.addEventListener('touchstart', function () { }, { passive: true });
+
+            // Video seek functionality
+            video.addEventListener('click', function (e) {
+                const videoRect = video.getBoundingClientRect();
+                const clickX = e.clientX - videoRect.left;
+                const videoWidth = videoRect.width;
+
+                if (clickX < videoWidth / 2) {
+                    // Left side clicked - seek backward
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                } else {
+                    // Right side clicked - seek forward
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>
